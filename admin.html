@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | CHOICE SOULS MEDIA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans">
+
+  <!-- Login Screen -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border border-slate-200">
+      <h2 class="text-2xl font-bold text-center text-slate-900 mb-1">CHOICE SOULS MEDIA</h2>
+      <p class="text-center text-xs text-slate-500 mb-6 uppercase tracking-wider font-semibold">Admin Login Portal</p>
+      
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Username or Email</label>
+          <input type="text" id="login-email" class="w-full border p-2.5 rounded-lg text-sm" placeholder="admin" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Password</label>
+          <input type="password" id="login-password" class="w-full border p-2.5 rounded-lg text-sm" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="w-full bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold py-3 rounded-lg shadow transition">Login to Control Panel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard Screen -->
+  <div id="dashboard-screen" class="hidden min-h-screen p-4 md:p-8 max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-8 bg-white p-5 rounded-xl shadow border border-slate-200">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Admin Control Panel</h1>
+        <p class="text-xs text-slate-500">Managing Choice Souls Media Content</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="index.html" target="_blank" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold px-3.5 py-2 rounded-lg">View Live Site</a>
+        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg">Logout</button>
+      </div>
+    </div>
+
+    <!-- Security Credentials -->
+    <div class="bg-white p-6 rounded-xl shadow border border-amber-200 mb-6">
+      <h3 class="text-lg font-bold text-amber-800 mb-4 border-b pb-2 flex items-center gap-2">
+        <span>🔒</span> Change Admin Login Credentials
+      </h3>
+      <form onsubmit="updateCredentials(event)" class="grid md:grid-cols-3 gap-4 items-end">
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-700">New Email / Username</label>
+          <input type="text" id="new-admin-email" placeholder="e.g., pastor@choicesouls.org" class="w-full border p-2 rounded text-sm" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-700">New Password</label>
+          <input type="password" id="new-admin-pass" placeholder="••••••••" class="w-full border p-2 rounded text-sm" required>
+        </div>
+        <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2 px-4 rounded text-sm shadow transition">Update Credentials</button>
+      </form>
+    </div>
+
+    <!-- Main Content Form -->
+    <form onsubmit="saveData(event)" class="space-y-6">
+      
+      <!-- 1. Site Branding & Logo -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">1. Site Branding & Logo</h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold mb-1">Website Name</label>
+            <input type="text" id="admin-site-name" class="w-full border p-2 rounded text-sm mb-3" required>
+            <label class="block text-xs font-bold mb-1">Website Description / Motto</label>
+            <textarea id="admin-site-desc" class="w-full border p-2 rounded text-sm" rows="2"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Upload Logo Image</label>
+            <input type="file" accept="image/*" onchange="previewAndConvertLogo(event)" class="w-full border p-2 rounded text-sm mb-2">
+            <div id="logo-preview-container" class="mt-2">
+              <img id="logo-preview" src="" class="h-16 w-auto rounded border p-1 hidden" alt="Logo Preview">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Service Cards Hub -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-slate-900">2. Service Cards Manager</h3>
+          <button type="button" onclick="addServiceCardField()" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded hover:bg-amber-200">+ Add Card</button>
+        </div>
+        <div id="service-cards-editor-container" class="space-y-4"></div>
+      </div>
+
+      <!-- 3. Dynamic Video Sermons & Archive -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-slate-900">3. Video Messages & Archive List</h3>
+          <button type="button" onclick="addVideoField()" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded hover:bg-amber-200">+ Add Video</button>
+        </div>
+        <div id="videos-editor-container" class="space-y-4"></div>
+      </div>
+
+      <!-- 4. Flier Carousel Settings -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-slate-900">4. Event Flier Carousel Slider</h3>
+          <button type="button" onclick="addFlierField()" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded hover:bg-amber-200">+ Add Flier</button>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 mb-4 bg-slate-50 p-4 rounded-lg">
+          <div>
+            <label class="block text-xs font-bold mb-1">Slide Display Duration (Seconds)</label>
+            <input type="number" id="admin-flier-duration" min="1" max="20" class="w-full border p-2 rounded text-sm" required>
+          </div>
+          <div>
+            <label class="block text-xs font-bold mb-1">Transition Animation Effect</label>
+            <select id="admin-flier-effect" class="w-full border p-2 rounded text-sm">
+              <option value="slide">Slide In</option>
+              <option value="fade">Smooth Fade</option>
+              <option value="zoom">Zoom Scale</option>
+              <option value="3d">3D Flip</option>
+            </select>
+          </div>
+        </div>
+        <div id="fliers-editor-container" class="space-y-4"></div>
+      </div>
+
+      <!-- 5. Announcement Bar -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">5. Announcement Bar</h3>
+        <input type="text" id="admin-announcement" class="w-full border p-2 rounded text-sm mb-2" required>
+        <select id="admin-announcement-effect" class="w-full border p-2 rounded text-sm">
+          <option value="scroll">Scrolling Effect</option>
+          <option value="breathe">Breathing Effect</option>
+        </select>
+      </div>
+
+      <!-- 6. Event Countdown -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">6. Upcoming Program Countdown</h3>
+        <input type="text" id="admin-event-title" placeholder="Event Title" class="w-full border p-2 rounded text-sm mb-2" required>
+        <input type="datetime-local" id="admin-event-date" class="w-full border p-2 rounded text-sm mb-2" required>
+        <textarea id="admin-event-desc" placeholder="Event Description" class="w-full border p-2 rounded text-sm"></textarea>
+      </div>
+
+      <!-- 7. FAQs -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-slate-900">7. Frequently Asked Questions</h3>
+          <button type="button" onclick="addFaqField()" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded hover:bg-amber-200">+ Add FAQ</button>
+        </div>
+        <div id="faq-editor-container" class="space-y-4"></div>
+      </div>
+
+      <!-- 8. Contacts & Socials -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">8. Contact Details & Social Media Embeds</h3>
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <input type="email" id="admin-email" placeholder="Email Address" class="border p-2 rounded text-sm">
+          <input type="text" id="admin-phone" placeholder="Phone Number" class="border p-2 rounded text-sm">
+          <input type="text" id="admin-whatsapp" placeholder="WhatsApp Number" class="border p-2 rounded text-sm">
+          <input type="text" id="admin-address" placeholder="Physical Address" class="border p-2 rounded text-sm">
+        </div>
+        <div class="border-t pt-4 grid md:grid-cols-3 gap-4">
+          <input type="text" id="admin-facebook" placeholder="Facebook URL" class="border p-2 rounded text-sm">
+          <input type="text" id="admin-instagram" placeholder="Instagram URL" class="border p-2 rounded text-sm">
+          <input type="text" id="admin-youtube" placeholder="YouTube URL" class="border p-2 rounded text-sm">
+        </div>
+      </div>
+
+      <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl shadow-lg text-lg transition">Publish All Changes Live</button>
+    </form>
+  </div>
+
+  <script>
+    let churchData = {};
+    let currentBase64Logo = "";
+
+    function getCredentials() {
+      const storedCreds = localStorage.getItem('adminCredentials');
+      return storedCreds ? JSON.parse(storedCreds) : { user: "admin", pass: "admin" };
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const inputUser = document.getElementById('login-email').value.trim();
+      const inputPass = document.getElementById('login-password').value.trim();
+      const currentCreds = getCredentials();
+
+      if (inputUser === currentCreds.user && inputPass === currentCreds.pass) {
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        showDashboard();
+      } else {
+        alert('Invalid login credentials.');
+      }
+    }
+
+    function updateCredentials(e) {
+      e.preventDefault();
+      const newUser = document.getElementById('new-admin-email').value.trim();
+      const newPass = document.getElementById('new-admin-pass').value.trim();
+
+      if (newUser && newPass) {
+        localStorage.setItem('adminCredentials', JSON.stringify({ user: newUser, pass: newPass }));
+        alert(`Credentials updated successfully!`);
+        document.getElementById('new-admin-email').value = '';
+        document.getElementById('new-admin-pass').value = '';
+      }
+    }
+
+    function showDashboard() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('dashboard-screen').classList.remove('hidden');
+      loadAndPopulateForm();
+    }
+
+    function logout() {
+      sessionStorage.removeItem('adminLoggedIn');
+      location.reload();
+    }
+
+    function loadAndPopulateForm() {
+      const stored = localStorage.getItem('churchWebsiteData');
+      churchData = stored ? JSON.parse(stored) : {};
+
+      document.getElementById('admin-site-name').value = churchData.siteName || "CHOICE SOULS MEDIA";
+      document.getElementById('admin-site-desc').value = churchData.siteDescription || "";
+      
+      if (churchData.siteLogo) {
+        currentBase64Logo = churchData.siteLogo;
+        const img = document.getElementById('logo-preview');
+        img.src = churchData.siteLogo;
+        img.classList.remove('hidden');
+      }
+
+      if (churchData.announcements && churchData.announcements[0]) {
+        document.getElementById('admin-announcement').value = churchData.announcements[0].text;
+        document.getElementById('admin-announcement-effect').value = churchData.announcements[0].effect;
+      }
+
+      renderServiceCardFields();
+      renderVideoFields();
+
+      const fConfig = churchData.fliersConfig || { duration: 4, effect: "slide" };
+      document.getElementById('admin-flier-duration').value = fConfig.duration;
+      document.getElementById('admin-flier-effect').value = fConfig.effect;
+      renderFlierFields();
+
+      renderFaqFields();
+
+      if (churchData.upcomingProgram) {
+        document.getElementById('admin-event-title').value = churchData.upcomingProgram.title;
+        document.getElementById('admin-event-date').value = churchData.upcomingProgram.date.slice(0, 16);
+        document.getElementById('admin-event-desc').value = churchData.upcomingProgram.description;
+      }
+
+      if (churchData.contacts) {
+        document.getElementById('admin-email').value = churchData.contacts.email || '';
+        document.getElementById('admin-phone').value = churchData.contacts.phone || '';
+        document.getElementById('admin-whatsapp').value = churchData.contacts.whatsapp || '';
+        document.getElementById('admin-address').value = churchData.contacts.address || '';
+      }
+
+      if (churchData.socials) {
+        document.getElementById('admin-facebook').value = churchData.socials.facebook || '';
+        document.getElementById('admin-instagram').value = churchData.socials.instagram || '';
+        document.getElementById('admin-youtube').value = churchData.socials.youtube || '';
+      }
+    }
+
+    function previewAndConvertLogo(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          currentBase64Logo = evt.target.result;
+          const img = document.getElementById('logo-preview');
+          img.src = currentBase64Logo;
+          img.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Dynamic Service Cards
+    function renderServiceCardFields() {
+      const container = document.getElementById('service-cards-editor-container');
+      container.innerHTML = '';
+      const cards = churchData.serviceCards || [];
+
+      cards.forEach((card, i) => {
+        container.innerHTML += `
+          <div class="border p-4 rounded-lg bg-slate-50 relative">
+            <button type="button" onclick="removeServiceCard(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
+            <input type="text" id="card-title-${i}" value="${card.title}" placeholder="Card Title (e.g. Registration)" class="w-full border p-2 rounded text-sm mb-2" required>
+            <textarea id="card-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2" required>${card.description}</textarea>
+            <input type="text" id="card-link-${i}" value="${card.link}" placeholder="Redirect URL Link (e.g. https://... or #contact)" class="w-full border p-2 rounded text-sm" required>
+          </div>`;
+      });
+    }
+
+    function addServiceCardField() {
+      if (!churchData.serviceCards) churchData.serviceCards = [];
+      churchData.serviceCards.push({ title: "New Service", description: "Service details...", link: "#" });
+      renderServiceCardFields();
+    }
+
+    function removeServiceCard(i) {
+      churchData.serviceCards.splice(i, 1);
+      renderServiceCardFields();
+    }
+
+    // Dynamic Videos List
+    function renderVideoFields() {
+      const container = document.getElementById('videos-editor-container');
+      container.innerHTML = '';
+      const vids = churchData.videos || [];
+
+      vids.forEach((v, i) => {
+        container.innerHTML += `
+          <div class="border p-4 rounded-lg bg-slate-50 relative">
+            <button type="button" onclick="removeVideo(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
+            <div class="grid md:grid-cols-2 gap-2 mb-2">
+              <input type="text" id="vid-title-${i}" value="${v.title}" placeholder="Sermon Title" class="border p-2 rounded text-sm" required>
+              <input type="text" id="vid-yt-${i}" value="${v.youtubeId}" placeholder="YouTube Video ID (e.g. M7lc1UVf-VE)" class="border p-2 rounded text-sm" required>
+            </div>
+            <textarea id="vid-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2">${v.description || ''}</textarea>
+            <input type="text" id="vid-date-${i}" value="${v.date || ''}" placeholder="Date / Tag (e.g. August 2026)" class="w-full border p-2 rounded text-sm">
+          </div>`;
+      });
+    }
+
+    function addVideoField() {
+      if (!churchData.videos) churchData.videos = [];
+      churchData.videos.push({ title: "New Message", description: "", youtubeId: "", date: "2026" });
+      renderVideoFields();
+    }
+
+    function removeVideo(i) {
+      churchData.videos.splice(i, 1);
+      renderVideoFields();
+    }
+
+    // Dynamic Fliers
+    function renderFlierFields() {
+      const container = document.getElementById('fliers-editor-container');
+      container.innerHTML = '';
+      const fliers = churchData.fliers || [];
+
+      fliers.forEach((flier, index) => {
+        container.innerHTML += `
+          <div class="border p-4 rounded-lg bg-slate-50 relative flex flex-col md:flex-row gap-4 items-center">
+            <button type="button" onclick="removeFlier(${index})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
+            <img id="flier-preview-${index}" src="${flier.url}" class="w-32 h-20 object-cover rounded border" alt="Preview">
+            <div class="w-full">
+              <input type="text" id="flier-title-${index}" value="${flier.title}" placeholder="Flier Event Title" class="w-full border p-2 rounded text-sm mb-2" required>
+              <input type="file" accept="image/*" onchange="uploadFlierImage(event, ${index})" class="w-full border p-1 rounded text-xs">
+            </div>
+          </div>`;
+      });
+    }
+
+    function addFlierField() {
+      if (!churchData.fliers) churchData.fliers = [];
+      churchData.fliers.push({ title: "New Program Flier", url: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=1200&q=80" });
+      renderFlierFields();
+    }
+
+    function removeFlier(index) {
+      churchData.fliers.splice(index, 1);
+      renderFlierFields();
+    }
+
+    function uploadFlierImage(e, index) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          churchData.fliers[index].url = evt.target.result;
+          document.getElementById(`flier-preview-${index}`).src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Dynamic FAQs
+    function renderFaqFields() {
+      const container = document.getElementById('faq-editor-container');
+      container.innerHTML = '';
+      (churchData.faqs || []).forEach((faq, index) => {
+        container.innerHTML += `
+          <div class="border p-3 rounded-lg bg-slate-50 relative">
+            <button type="button" onclick="removeFaq(${index})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
+            <input type="text" id="faq-q-${index}" value="${faq.question}" placeholder="Question" class="w-full border p-2 rounded text-sm mb-2 pr-16" required>
+            <textarea id="faq-a-${index}" placeholder="Answer" class="w-full border p-2 rounded text-sm" rows="2" required>${faq.answer}</textarea>
+          </div>`;
+      });
+    }
+
+    function addFaqField() {
+      if (!churchData.faqs) churchData.faqs = [];
+      churchData.faqs.push({ question: "", answer: "" });
+      renderFaqFields();
+    }
+
+    function removeFaq(index) {
+      churchData.faqs.splice(index, 1);
+      renderFaqFields();
+    }
+
+    function saveData(e) {
+      e.preventDefault();
+
+      // Collect Service Cards
+      const updatedCards = [];
+      const cardCount = document.getElementById('service-cards-editor-container').children.length;
+      for (let i = 0; i < cardCount; i++) {
+        const title = document.getElementById(`card-title-${i}`)?.value;
+        const description = document.getElementById(`card-desc-${i}`)?.value;
+        const link = document.getElementById(`card-link-${i}`)?.value;
+        if (title && description && link) updatedCards.push({ id: Date.now() + i, title, description, link });
+      }
+
+      // Collect Videos
+      const updatedVideos = [];
+      const vidCount = document.getElementById('videos-editor-container').children.length;
+      for (let i = 0; i < vidCount; i++) {
+        const title = document.getElementById(`vid-title-${i}`)?.value;
+        const youtubeId = document.getElementById(`vid-yt-${i}`)?.value;
+        const description = document.getElementById(`vid-desc-${i}`)?.value;
+        const date = document.getElementById(`vid-date-${i}`)?.value;
+        if (title && youtubeId) updatedVideos.push({ id: Date.now() + i, title, youtubeId, description, date });
+      }
+
+      // Collect Fliers
+      const updatedFliers = (churchData.fliers || []).map((f, i) => ({
+        id: Date.now() + i,
+        title: document.getElementById(`flier-title-${i}`)?.value || f.title,
+        url: f.url
+      }));
+
+      // Collect FAQs
+      const updatedFaqs = [];
+      const faqCount = document.getElementById('faq-editor-container').children.length;
+      for (let i = 0; i < faqCount; i++) {
+        const q = document.getElementById(`faq-q-${i}`)?.value;
+        const a = document.getElementById(`faq-a-${i}`)?.value;
+        if (q && a) updatedFaqs.push({ id: Date.now() + i, question: q, answer: a });
+      }
+
+      churchData = {
+        siteName: document.getElementById('admin-site-name').value,
+        siteDescription: document.getElementById('admin-site-desc').value,
+        siteLogo: currentBase64Logo,
+        announcements: [{ id: 1, text: document.getElementById('admin-announcement').value, effect: document.getElementById('admin-announcement-effect').value }],
+        serviceCards: updatedCards,
+        fliersConfig: {
+          duration: parseInt(document.getElementById('admin-flier-duration').value) || 4,
+          effect: document.getElementById('admin-flier-effect').value
+        },
+        fliers: updatedFliers,
+        upcomingProgram: {
+          title: document.getElementById('admin-event-title').value,
+          date: document.getElementById('admin-event-date').value,
+          description: document.getElementById('admin-event-desc').value
+        },
+        videos: updatedVideos,
+        faqs: updatedFaqs,
+        contacts: {
+          email: document.getElementById('admin-email').value,
+          phone: document.getElementById('admin-phone').value,
+          whatsapp: document.getElementById('admin-whatsapp').value,
+          address: document.getElementById('admin-address').value
+        },
+        socials: {
+          facebook: document.getElementById('admin-facebook').value,
+          instagram: document.getElementById('admin-instagram').value,
+          youtube: document.getElementById('admin-youtube').value
+        }
+      };
+
+      localStorage.setItem('churchWebsiteData', JSON.stringify(churchData));
+      alert("All website updates saved successfully!");
+    }
+
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+      showDashboard();
+    }
+  </script>
+</body>
+</html>

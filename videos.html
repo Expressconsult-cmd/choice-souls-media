@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sermons & Previous Videos | CHOICE SOULS MEDIA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+  <!-- Header Navigation -->
+  <nav class="bg-white shadow-md sticky top-0 z-40 border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <a href="index.html" class="flex items-center space-x-3">
+        <img id="site-logo" src="" alt="Church Logo" class="h-10 w-auto rounded hidden">
+        <h1 id="site-name" class="text-xl font-bold text-slate-900">CHOICE SOULS MEDIA</h1>
+      </a>
+      <a href="index.html" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold text-sm px-4 py-2 rounded-lg transition">
+        &larr; Back to Home
+      </a>
+    </div>
+  </nav>
+
+  <!-- Banner Section -->
+  <section class="bg-slate-900 text-white py-12 px-4 text-center">
+    <span class="text-xs font-bold uppercase tracking-widest text-amber-400">Media Vault</span>
+    <h1 class="text-3xl md:text-5xl font-extrabold mt-1">Sermons & Previous Video Archive</h1>
+    <p class="text-slate-300 text-sm md:text-base max-w-xl mx-auto mt-2">Watch and revisit past messages, divine revelations, and event recordings.</p>
+  </section>
+
+  <!-- Video Player & List -->
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Active Video Player -->
+    <div class="bg-slate-950 rounded-2xl overflow-hidden shadow-2xl aspect-video max-w-4xl mx-auto mb-10 border border-slate-800">
+      <iframe id="archive-player" class="w-full h-full" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+    <!-- Videos List -->
+    <h2 class="text-2xl font-bold text-slate-900 mb-6">All Available Messages</h2>
+    <div id="archive-video-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Dynamically Rendered -->
+    </div>
+  </main>
+
+  <script>
+    function loadArchive() {
+      const stored = localStorage.getItem('churchWebsiteData');
+      if (!stored) return;
+      const data = JSON.parse(stored);
+
+      document.getElementById('site-name').innerText = data.siteName || "CHOICE SOULS MEDIA";
+      if (data.siteLogo) {
+        const logo = document.getElementById('site-logo');
+        logo.src = data.siteLogo;
+        logo.classList.remove('hidden');
+      }
+
+      const grid = document.getElementById('archive-video-grid');
+      grid.innerHTML = '';
+      const videos = data.videos || [];
+
+      if (videos.length > 0) {
+        playArchiveVideo(videos[0].youtubeId);
+        videos.forEach(vid => {
+          grid.innerHTML += `
+            <div onclick="playArchiveVideo('${vid.youtubeId}')" class="bg-white p-5 rounded-xl border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow-md cursor-pointer transition flex flex-col justify-between">
+              <div>
+                <span class="text-xs font-semibold text-amber-600">${vid.date || 'Sermon'}</span>
+                <h3 class="font-bold text-slate-900 text-lg mt-1 mb-2">${vid.title}</h3>
+                <p class="text-xs text-slate-600 mb-4 line-clamp-2">${vid.description || 'No description available.'}</p>
+              </div>
+              <div class="flex justify-between items-center border-t pt-3 text-xs font-bold text-amber-600">
+                <span>Watch Video</span>
+                <span>▶</span>
+              </div>
+            </div>`;
+        });
+      } else {
+        grid.innerHTML = `<p class="text-slate-500">No videos available in archive yet.</p>`;
+      }
+    }
+
+    function playArchiveVideo(id) {
+      document.getElementById('archive-player').src = `https://www.youtube.com/embed/${id}?autoplay=0`;
+      window.scrollTo({ top: 150, behavior: 'smooth' });
+    }
+
+    loadArchive();
+  </script>
+</body>
+</html>
