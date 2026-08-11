@@ -42,6 +42,12 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans overflow-x-hidden">
 
+  <!-- Page Loader: hides default placeholder content until live data arrives -->
+  <div id="page-loader" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-slate-400 text-sm font-medium">Loading...</p>
+  </div>
+
   <!-- Dynamic Announcement Bar -->
   <div id="announcement-bar" class="bg-slate-900 text-amber-400 border-b border-amber-500/20 py-2 px-4 shadow-md overflow-hidden h-[34px] flex items-center">
     <div id="announcement-content" class="text-center text-sm font-semibold w-full truncate">Loading announcements...</div>
@@ -255,11 +261,34 @@
       document.body.classList.remove('overflow-hidden');
     }
 
+    let hasRenderedOnce = false;
+
     function loadData() {
       db.ref('churchData').on('value', (snapshot) => {
         churchData = snapshot.val() || {};
         renderFrontend();
+        if (!hasRenderedOnce) {
+          hasRenderedOnce = true;
+          hidePageLoader();
+        }
+      }, (error) => {
+        // If Firebase fails to connect, don't leave visitors stuck on a blank loading screen
+        console.error("Firebase load error:", error);
+        hidePageLoader();
       });
+
+      // Safety net: if data hasn't arrived within 6 seconds (e.g. slow connection),
+      // reveal the default content anyway rather than leaving a blank screen.
+      setTimeout(() => {
+        if (!hasRenderedOnce) hidePageLoader();
+      }, 6000);
+    }
+
+    function hidePageLoader() {
+      const loader = document.getElementById('page-loader');
+      if (!loader) return;
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 500);
     }
 
     function renderFrontend() {
