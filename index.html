@@ -241,11 +241,15 @@
         logoImg.classList.remove('hidden');
       }
 
+      const annBar = document.getElementById('announcement-bar');
       const annContainer = document.getElementById('announcement-content');
       const activeAnn = churchData.announcements ? churchData.announcements[0] : null;
-      if (activeAnn) {
+      if (activeAnn && activeAnn.enabled !== false && activeAnn.text) {
+        annBar.classList.remove('hidden');
         annContainer.innerText = activeAnn.text;
         annContainer.className = "text-center text-sm font-semibold " + (activeAnn.effect === 'scroll' ? 'animate-marquee' : 'animate-breathe text-amber-300');
+      } else {
+        annBar.classList.add('hidden');
       }
 
       const servicesGrid = document.getElementById('services-grid');
