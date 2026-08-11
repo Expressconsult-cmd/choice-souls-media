@@ -291,6 +291,16 @@
       setTimeout(() => loader.remove(), 500);
     }
 
+    // Prevents 404s when an admin pastes a link without "https://" —
+    // without a protocol, browsers treat it as a path on this same site.
+    function normalizeLink(url) {
+      if (!url) return '#';
+      const trimmed = url.trim();
+      if (trimmed === '' || trimmed === '#') return '#';
+      if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(trimmed)) return trimmed;
+      return 'https://' + trimmed;
+    }
+
     function renderFrontend() {
       document.title = churchData.siteName || "CHOICE SOULS MEDIA";
       document.getElementById('site-name').innerText = churchData.siteName || "CHOICE SOULS MEDIA";
@@ -326,7 +336,7 @@
               <h3 class="text-xl font-bold text-slate-900 mb-2">${card.title}</h3>
               <p class="text-slate-600 text-sm mb-6">${card.description}</p>
             </div>
-            <a href="${card.link}" class="inline-flex items-center justify-between w-full font-bold text-amber-600 hover:text-amber-700 text-sm border-t pt-4 border-slate-100">
+            <a href="${normalizeLink(card.link)}" class="inline-flex items-center justify-between w-full font-bold text-amber-600 hover:text-amber-700 text-sm border-t pt-4 border-slate-100">
               Access Now <span>&rarr;</span>
             </a>
           </div>`;
@@ -370,9 +380,9 @@
       document.getElementById('contact-address').innerText = c.address || '-';
       document.getElementById('whatsapp-btn').href = `https://wa.me/${c.whatsapp || ''}`;
 
-      document.getElementById('social-facebook').href = s.facebook || '#';
-      document.getElementById('social-instagram').href = s.instagram || '#';
-      document.getElementById('social-youtube').href = s.youtube || '#';
+      document.getElementById('social-facebook').href = normalizeLink(s.facebook);
+      document.getElementById('social-instagram').href = normalizeLink(s.instagram);
+      document.getElementById('social-youtube').href = normalizeLink(s.youtube);
     }
 
     function setupCarousel() {
