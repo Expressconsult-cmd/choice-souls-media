@@ -28,7 +28,7 @@
         </div>
         <button type="submit" class="w-full bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold py-3 rounded-lg shadow transition">Login to Control Panel</button>
       </form>
-      <p class="text-xs text-center text-slate-400 mt-4">Forgot login ? — Contact Admin
+      <p class="text-xs text-center text-slate-400 mt-4">Default login — Username: <b>admin</b> | Password: <b>admin</b></p>
     </div>
   </div>
 
@@ -370,7 +370,7 @@
             <button type="button" onclick="removeServiceCard(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
             <input type="text" id="card-title-${i}" value="${card.title || ''}" placeholder="Card Title" class="w-full border p-2 rounded text-sm mb-2">
             <textarea id="card-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2">${card.description || ''}</textarea>
-            <input type="text" id="card-link-${i}" value="${card.link || ''}" placeholder="Link URL" class="w-full border p-2 rounded text-sm">
+            <input type="text" id="card-link-${i}" value="${card.link || ''}" placeholder="https://forms.google.com/..." class="w-full border p-2 rounded text-sm">
           </div>`;
       });
     }
