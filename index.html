@@ -40,7 +40,7 @@
     .effect-3d .carousel-item { transform: rotateY(90deg) scale(0.9); perspective: 1000px; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
+<body class="bg-slate-50 text-slate-800 font-sans overflow-x-hidden">
 
   <!-- Dynamic Announcement Bar -->
   <div id="announcement-bar" class="bg-slate-900 text-amber-400 border-b border-amber-500/20 py-2 px-4 shadow-md">
@@ -49,21 +49,34 @@
 
   <!-- Navigation -->
   <nav class="bg-white shadow-md sticky top-0 z-40 border-b border-slate-100">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <img id="site-logo" src="" alt="Church Logo" class="h-12 w-auto rounded hidden">
-        <h1 id="site-name" class="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">CHOICE SOULS MEDIA</h1>
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center gap-3">
+      <div class="flex items-center space-x-3 min-w-0">
+        <img id="site-logo" src="" alt="Church Logo" class="h-10 md:h-12 w-auto rounded hidden flex-shrink-0">
+        <h1 id="site-name" class="text-lg md:text-2xl font-bold text-slate-900 tracking-tight truncate">CHOICE SOULS MEDIA</h1>
       </div>
-      <div class="space-x-6 text-sm font-medium hidden md:flex items-center">
+      <div class="space-x-6 text-sm font-medium hidden md:flex items-center flex-shrink-0">
         <a href="#hero" class="hover:text-amber-600 transition">Home</a>
         <a href="#services" class="hover:text-amber-600 transition">Services</a>
         <a href="#fliers-section" class="hover:text-amber-600 transition">Events</a>
         <a href="#videos" class="hover:text-amber-600 transition">Sermons</a>
         <a href="videos.html" class="hover:text-amber-600 transition font-bold text-amber-600">Video Archive</a>
-        <a href="#faq" class="hover:text-amber-600 transition">FAQs</a>
+        <a href="#" onclick="openFaqModal(); return false;" class="hover:text-amber-600 transition">FAQs</a>
         <a href="#contact" class="hover:text-amber-600 transition">Contact</a>
         <a href="admin.html" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition shadow-sm">Admin Portal</a>
       </div>
+      <button onclick="toggleMobileMenu()" class="md:hidden flex-shrink-0 p-2 text-slate-700" aria-label="Menu">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-1">
+      <a href="#hero" onclick="toggleMobileMenu()" class="block py-2 text-sm font-medium hover:text-amber-600">Home</a>
+      <a href="#services" onclick="toggleMobileMenu()" class="block py-2 text-sm font-medium hover:text-amber-600">Services</a>
+      <a href="#fliers-section" onclick="toggleMobileMenu()" class="block py-2 text-sm font-medium hover:text-amber-600">Events</a>
+      <a href="#videos" onclick="toggleMobileMenu()" class="block py-2 text-sm font-medium hover:text-amber-600">Sermons</a>
+      <a href="videos.html" class="block py-2 text-sm font-bold text-amber-600">Video Archive</a>
+      <a href="#" onclick="openFaqModal(); toggleMobileMenu(); return false;" class="block py-2 text-sm font-medium hover:text-amber-600">FAQs</a>
+      <a href="#contact" onclick="toggleMobileMenu()" class="block py-2 text-sm font-medium hover:text-amber-600">Contact</a>
+      <a href="admin.html" class="block py-2 text-sm font-bold text-amber-600">Admin Portal</a>
     </div>
   </nav>
 
@@ -87,7 +100,7 @@
         <span class="text-xs font-bold uppercase tracking-widest text-amber-600">Quick Access</span>
         <h2 class="text-3xl font-extrabold text-slate-900 mt-1">Our Quick Services & Hubs</h2>
       </div>
-      <div id="services-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      <div id="services-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[120px]"></div>
     </div>
   </section>
 
@@ -147,17 +160,23 @@
         <iframe id="main-player" class="w-full h-full" src="" frameborder="0" allowfullscreen></iframe>
       </div>
 
-      <div id="video-grid" class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"></div>
+      <div id="video-grid" class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto min-h-[80px]"></div>
     </div>
   </section>
 
-  <!-- FAQ Section -->
-  <section id="faq" class="py-16 bg-white border-t">
-    <div class="max-w-4xl mx-auto px-4">
-      <h2 class="text-3xl font-bold text-center mb-8 text-slate-900">Frequently Asked Questions</h2>
+  <!-- FAQ Modal (hidden by default, opens from nav) -->
+  <div id="faq-modal" class="hidden fixed inset-0 z-50 flex items-start md:items-center justify-center p-4 overflow-y-auto">
+    <div onclick="closeFaqModal()" class="absolute inset-0 bg-slate-950/70"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8 p-6 md:p-8">
+      <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <h2 class="text-2xl font-bold text-slate-900">Frequently Asked Questions</h2>
+        <button onclick="closeFaqModal()" class="text-slate-400 hover:text-slate-700 p-1" aria-label="Close">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
       <div id="faq-container" class="space-y-4"></div>
     </div>
-  </section>
+  </div>
 
   <!-- Contact & Footer Section -->
   <footer id="contact" class="bg-slate-950 text-white border-t border-slate-800 pt-16 pb-12">
@@ -221,6 +240,20 @@
     let countdownInterval;
     let carouselInterval;
     let currentSlideIndex = 0;
+
+    function toggleMobileMenu() {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    }
+
+    function openFaqModal() {
+      document.getElementById('faq-modal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeFaqModal() {
+      document.getElementById('faq-modal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
 
     function loadData() {
       db.ref('churchData').on('value', (snapshot) => {
