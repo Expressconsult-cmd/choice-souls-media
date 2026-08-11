@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title id="page-title">CHOICE SOULS MEDIA</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     @keyframes breathe {
       0%, 100% { transform: scale(1); opacity: 1; }
@@ -199,32 +202,31 @@
   </footer>
 
   <script>
-    const JSONBIN_BIN_ID = localStorage.getItem('jsonbin_bin_id') || "";
-    const JSONBIN_API_KEY = localStorage.getItem('jsonbin_api_key') || "";
+    // Paste your Firebase Config object here
+    const firebaseConfig = {
+      apiKey: "AIzaSyAK4oFHPdcmZvb6Gsis_2XSy4ljbJp7dkA",
+      authDomain: "choice-souls-media.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "choice-souls-media",
+      storageBucket: "choice-souls-media.firebasestorage.app",
+      messagingSenderId: "317717012894",
+      appId: "1:317717012894:web:682450a305ad630ea9368f"
+      measurementId: "G-37TWV4WJQJ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     let churchData = {};
     let countdownInterval;
     let carouselInterval;
     let currentSlideIndex = 0;
 
-    async function loadData() {
-      if (JSONBIN_BIN_ID) {
-        try {
-          const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-            headers: { "X-Master-Key": JSONBIN_API_KEY }
-          });
-          const json = await res.json();
-          churchData = json.record || {};
-        } catch (e) {
-          console.error("Cloud fetch failed, using local storage", e);
-          const stored = localStorage.getItem('churchWebsiteData');
-          if (stored) churchData = JSON.parse(stored);
-        }
-      } else {
-        const stored = localStorage.getItem('churchWebsiteData');
-        if (stored) churchData = JSON.parse(stored);
-      }
-      renderFrontend();
+    function loadData() {
+      db.ref('churchData').on('value', (snapshot) => {
+        churchData = snapshot.val() || {};
+        renderFrontend();
+      });
     }
 
     function renderFrontend() {
