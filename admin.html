@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | CHOICE SOULS MEDIA</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 font-sans">
 
@@ -39,25 +42,6 @@
         <a href="index.html" target="_blank" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold px-3.5 py-2 rounded-lg">View Live Site</a>
         <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg">Logout</button>
       </div>
-    </div>
-
-    <!-- Cloud Sync Config (JSONBin) -->
-    <div class="bg-white p-6 rounded-xl shadow border border-blue-200 mb-6">
-      <h3 class="text-lg font-bold text-blue-900 mb-2 flex items-center gap-2">
-        <span>☁️</span> Cloud Database Integration (JSONBin.io)
-      </h3>
-      <p class="text-xs text-slate-600 mb-4">Enter your JSONBin details so updates sync globally across all mobile and desktop devices.</p>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-bold mb-1">JSONBin Master API Key</label>
-          <input type="password" id="jsonbin-key" placeholder="Enter Secret Key" class="w-full border p-2 rounded text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold mb-1">JSONBin Bin ID</label>
-          <input type="text" id="jsonbin-bin" placeholder="Enter Bin ID" class="w-full border p-2 rounded text-sm">
-        </div>
-      </div>
-      <button type="button" onclick="saveCloudConfig()" class="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded transition">Save Cloud Configuration</button>
     </div>
 
     <!-- Security Credentials -->
@@ -191,6 +175,21 @@
   </div>
 
   <script>
+    // Paste your Firebase Config object here
+    const firebaseConfig = {
+      apiKey: "AIzaSyAK4oFHPdcmZvb6Gsis_2XSy4ljbJp7dkA",
+      authDomain: "choice-souls-media.firebaseapp.com",
+      databaseURL: "https://choice-souls-media-default-rtdb.firebaseio.com/",
+      projectId: "choice-souls-media",
+      storageBucket: "choice-souls-media.firebasestorage.app",
+      messagingSenderId: "317717012894",
+      appId: "1:317717012894:web:682450a305ad630ea9368f"
+      measurementId: "G-37TWV4WJQJ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     let churchData = {};
     let currentBase64Logo = "";
 
@@ -224,21 +223,9 @@
       }
     }
 
-    function saveCloudConfig() {
-      const k = document.getElementById('jsonbin-key').value.trim();
-      const b = document.getElementById('jsonbin-bin').value.trim();
-      localStorage.setItem('jsonbin_api_key', k);
-      localStorage.setItem('jsonbin_bin_id', b);
-      alert('Cloud JSONBin Configuration Saved!');
-    }
-
     function showDashboard() {
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard-screen').classList.remove('hidden');
-      
-      document.getElementById('jsonbin-key').value = localStorage.getItem('jsonbin_api_key') || "";
-      document.getElementById('jsonbin-bin').value = localStorage.getItem('jsonbin_bin_id') || "";
-
       loadAndPopulateForm();
     }
 
@@ -247,65 +234,54 @@
       location.reload();
     }
 
-    async function loadAndPopulateForm() {
-      const binId = localStorage.getItem('jsonbin_bin_id');
-      const apiKey = localStorage.getItem('jsonbin_api_key');
+    function loadAndPopulateForm() {
+      db.ref('churchData').once('value', (snapshot) => {
+        churchData = snapshot.val() || {};
 
-      if (binId) {
-        try {
-          const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-            headers: { "X-Master-Key": apiKey }
-          });
-          const json = await res.json();
-          churchData = json.record || {};
-        } catch(e) {
-          console.error("Cloud load error", e);
+        document.getElementById('admin-site-name').value = churchData.siteName || "CHOICE SOULS MEDIA";
+        document.getElementById('admin-site-desc').value = churchData.siteDescription || "";
+        
+        if (churchData.siteLogo) {
+          currentBase64Logo = churchData.siteLogo;
+          const img = document.getElementById('logo-preview');
+          img.src = churchData.siteLogo;
+          img.classList.remove('hidden');
         }
-      }
 
-      document.getElementById('admin-site-name').value = churchData.siteName || "CHOICE SOULS MEDIA";
-      document.getElementById('admin-site-desc').value = churchData.siteDescription || "";
-      
-      if (churchData.siteLogo) {
-        currentBase64Logo = churchData.siteLogo;
-        const img = document.getElementById('logo-preview');
-        img.src = churchData.siteLogo;
-        img.classList.remove('hidden');
-      }
+        if (churchData.announcements && churchData.announcements[0]) {
+          document.getElementById('admin-announcement').value = churchData.announcements[0].text || "";
+          document.getElementById('admin-announcement-effect').value = churchData.announcements[0].effect || "scroll";
+        }
 
-      if (churchData.announcements && churchData.announcements[0]) {
-        document.getElementById('admin-announcement').value = churchData.announcements[0].text;
-        document.getElementById('admin-announcement-effect').value = churchData.announcements[0].effect;
-      }
+        renderServiceCardFields();
+        renderVideoFields();
 
-      renderServiceCardFields();
-      renderVideoFields();
+        const fConfig = churchData.fliersConfig || { duration: 4, effect: "slide" };
+        document.getElementById('admin-flier-duration').value = fConfig.duration;
+        document.getElementById('admin-flier-effect').value = fConfig.effect;
+        renderFlierFields();
 
-      const fConfig = churchData.fliersConfig || { duration: 4, effect: "slide" };
-      document.getElementById('admin-flier-duration').value = fConfig.duration;
-      document.getElementById('admin-flier-effect').value = fConfig.effect;
-      renderFlierFields();
+        renderFaqFields();
 
-      renderFaqFields();
+        if (churchData.upcomingProgram) {
+          document.getElementById('admin-event-title').value = churchData.upcomingProgram.title || '';
+          document.getElementById('admin-event-date').value = churchData.upcomingProgram.date ? churchData.upcomingProgram.date.slice(0, 16) : '';
+          document.getElementById('admin-event-desc').value = churchData.upcomingProgram.description || '';
+        }
 
-      if (churchData.upcomingProgram) {
-        document.getElementById('admin-event-title').value = churchData.upcomingProgram.title || '';
-        document.getElementById('admin-event-date').value = churchData.upcomingProgram.date ? churchData.upcomingProgram.date.slice(0, 16) : '';
-        document.getElementById('admin-event-desc').value = churchData.upcomingProgram.description || '';
-      }
+        if (churchData.contacts) {
+          document.getElementById('admin-email').value = churchData.contacts.email || '';
+          document.getElementById('admin-phone').value = churchData.contacts.phone || '';
+          document.getElementById('admin-whatsapp').value = churchData.contacts.whatsapp || '';
+          document.getElementById('admin-address').value = churchData.contacts.address || '';
+        }
 
-      if (churchData.contacts) {
-        document.getElementById('admin-email').value = churchData.contacts.email || '';
-        document.getElementById('admin-phone').value = churchData.contacts.phone || '';
-        document.getElementById('admin-whatsapp').value = churchData.contacts.whatsapp || '';
-        document.getElementById('admin-address').value = churchData.contacts.address || '';
-      }
-
-      if (churchData.socials) {
-        document.getElementById('admin-facebook').value = churchData.socials.facebook || '';
-        document.getElementById('admin-instagram').value = churchData.socials.instagram || '';
-        document.getElementById('admin-youtube').value = churchData.socials.youtube || '';
-      }
+        if (churchData.socials) {
+          document.getElementById('admin-facebook').value = churchData.socials.facebook || '';
+          document.getElementById('admin-instagram').value = churchData.socials.instagram || '';
+          document.getElementById('admin-youtube').value = churchData.socials.youtube || '';
+        }
+      });
     }
 
     function previewAndConvertLogo(e) {
@@ -331,9 +307,9 @@
         container.innerHTML += `
           <div class="border p-4 rounded-lg bg-slate-50 relative">
             <button type="button" onclick="removeServiceCard(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
-            <input type="text" id="card-title-${i}" value="${card.title}" placeholder="Card Title" class="w-full border p-2 rounded text-sm mb-2" required>
-            <textarea id="card-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2" required>${card.description}</textarea>
-            <input type="text" id="card-link-${i}" value="${card.link}" placeholder="Link URL" class="w-full border p-2 rounded text-sm" required>
+            <input type="text" id="card-title-${i}" value="${card.title || ''}" placeholder="Card Title" class="w-full border p-2 rounded text-sm mb-2" required>
+            <textarea id="card-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2" required>${card.description || ''}</textarea>
+            <input type="text" id="card-link-${i}" value="${card.link || ''}" placeholder="Link URL" class="w-full border p-2 rounded text-sm" required>
           </div>`;
       });
     }
@@ -359,8 +335,8 @@
           <div class="border p-4 rounded-lg bg-slate-50 relative">
             <button type="button" onclick="removeVideo(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
             <div class="grid md:grid-cols-2 gap-2 mb-2">
-              <input type="text" id="vid-title-${i}" value="${v.title}" placeholder="Sermon Title" class="border p-2 rounded text-sm" required>
-              <input type="text" id="vid-yt-${i}" value="${v.youtubeId}" placeholder="YouTube Video ID" class="border p-2 rounded text-sm" required>
+              <input type="text" id="vid-title-${i}" value="${v.title || ''}" placeholder="Sermon Title" class="border p-2 rounded text-sm" required>
+              <input type="text" id="vid-yt-${i}" value="${v.youtubeId || ''}" placeholder="YouTube Video ID" class="border p-2 rounded text-sm" required>
             </div>
             <textarea id="vid-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2">${v.description || ''}</textarea>
             <input type="text" id="vid-date-${i}" value="${v.date || ''}" placeholder="Date / Tag" class="w-full border p-2 rounded text-sm">
@@ -390,7 +366,7 @@
             <button type="button" onclick="removeFlier(${index})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
             <img id="flier-preview-${index}" src="${flier.url}" class="w-32 h-20 object-cover rounded border" alt="Preview">
             <div class="w-full">
-              <input type="text" id="flier-title-${index}" value="${flier.title}" placeholder="Flier Event Title" class="w-full border p-2 rounded text-sm mb-2" required>
+              <input type="text" id="flier-title-${index}" value="${flier.title || ''}" placeholder="Flier Event Title" class="w-full border p-2 rounded text-sm mb-2" required>
               <input type="file" accept="image/*" onchange="uploadFlierImage(event, ${index})" class="w-full border p-1 rounded text-xs">
             </div>
           </div>`;
@@ -427,8 +403,8 @@
         container.innerHTML += `
           <div class="border p-3 rounded-lg bg-slate-50 relative">
             <button type="button" onclick="removeFaq(${index})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
-            <input type="text" id="faq-q-${index}" value="${faq.question}" placeholder="Question" class="w-full border p-2 rounded text-sm mb-2 pr-16" required>
-            <textarea id="faq-a-${index}" placeholder="Answer" class="w-full border p-2 rounded text-sm" rows="2" required>${faq.answer}</textarea>
+            <input type="text" id="faq-q-${index}" value="${faq.question || ''}" placeholder="Question" class="w-full border p-2 rounded text-sm mb-2 pr-16" required>
+            <textarea id="faq-a-${index}" placeholder="Answer" class="w-full border p-2 rounded text-sm" rows="2" required>${faq.answer || ''}</textarea>
           </div>`;
       });
     }
@@ -447,7 +423,7 @@
     async function saveData(e) {
       e.preventDefault();
       const saveBtn = document.getElementById('save-btn');
-      saveBtn.innerText = "Publishing to Cloud...";
+      saveBtn.innerText = "Publishing to Firebase...";
       saveBtn.disabled = true;
 
       const updatedCards = [];
@@ -514,33 +490,14 @@
         }
       };
 
-      const binId = localStorage.getItem('jsonbin_bin_id');
-      const apiKey = localStorage.getItem('jsonbin_api_key');
-
-      if (binId && apiKey) {
-        try {
-          const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Master-Key': apiKey
-            },
-            body: JSON.stringify(churchData)
-          });
-
-          if (res.ok) {
-            alert("All website updates saved and published live across all devices globally!");
-          } else {
-            alert("Failed to sync to cloud. Check your JSONBin credentials.");
-          }
-        } catch (err) {
-          alert("Network error publishing to cloud. Changes saved locally.");
-        }
-      } else {
-        alert("JSONBin API credentials missing! Changes saved locally only. Please enter Bin ID and API Key above.");
+      try {
+        await db.ref('churchData').set(churchData);
+        alert("All website updates saved and published live across all devices globally!");
+      } catch (err) {
+        console.error("Firebase write error:", err);
+        alert("Failed to sync to Firebase. Check your database security rules in the Firebase console.");
       }
 
-      localStorage.setItem('churchWebsiteData', JSON.stringify(churchData));
       saveBtn.innerText = "Publish All Changes Globally";
       saveBtn.disabled = false;
     }
