@@ -41,6 +41,25 @@
       </div>
     </div>
 
+    <!-- Cloud Sync Config (JSONBin) -->
+    <div class="bg-white p-6 rounded-xl shadow border border-blue-200 mb-6">
+      <h3 class="text-lg font-bold text-blue-900 mb-2 flex items-center gap-2">
+        <span>☁️</span> Cloud Database Integration (JSONBin.io)
+      </h3>
+      <p class="text-xs text-slate-600 mb-4">Enter your JSONBin details so updates sync globally across all mobile and desktop devices.</p>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold mb-1">JSONBin Master API Key</label>
+          <input type="password" id="jsonbin-key" placeholder="Enter Secret Key" class="w-full border p-2 rounded text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1">JSONBin Bin ID</label>
+          <input type="text" id="jsonbin-bin" placeholder="Enter Bin ID" class="w-full border p-2 rounded text-sm">
+        </div>
+      </div>
+      <button type="button" onclick="saveCloudConfig()" class="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded transition">Save Cloud Configuration</button>
+    </div>
+
     <!-- Security Credentials -->
     <div class="bg-white p-6 rounded-xl shadow border border-amber-200 mb-6">
       <h3 class="text-lg font-bold text-amber-800 mb-4 border-b pb-2 flex items-center gap-2">
@@ -62,7 +81,7 @@
     <!-- Main Content Form -->
     <form onsubmit="saveData(event)" class="space-y-6">
       
-      <!-- 1. Site Branding & Logo -->
+      <!-- Branding & Logo -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">1. Site Branding & Logo</h3>
         <div class="grid md:grid-cols-2 gap-4">
@@ -82,7 +101,7 @@
         </div>
       </div>
 
-      <!-- 2. Service Cards Hub -->
+      <!-- Service Cards Hub -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <div class="flex justify-between items-center mb-4 border-b pb-2">
           <h3 class="text-lg font-bold text-slate-900">2. Service Cards Manager</h3>
@@ -91,7 +110,7 @@
         <div id="service-cards-editor-container" class="space-y-4"></div>
       </div>
 
-      <!-- 3. Dynamic Video Sermons & Archive -->
+      <!-- Sermons & Archive -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <div class="flex justify-between items-center mb-4 border-b pb-2">
           <h3 class="text-lg font-bold text-slate-900">3. Video Messages & Archive List</h3>
@@ -100,7 +119,7 @@
         <div id="videos-editor-container" class="space-y-4"></div>
       </div>
 
-      <!-- 4. Flier Carousel Settings -->
+      <!-- Carousel -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <div class="flex justify-between items-center mb-4 border-b pb-2">
           <h3 class="text-lg font-bold text-slate-900">4. Event Flier Carousel Slider</h3>
@@ -124,7 +143,7 @@
         <div id="fliers-editor-container" class="space-y-4"></div>
       </div>
 
-      <!-- 5. Announcement Bar -->
+      <!-- Announcement -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">5. Announcement Bar</h3>
         <input type="text" id="admin-announcement" class="w-full border p-2 rounded text-sm mb-2" required>
@@ -134,7 +153,7 @@
         </select>
       </div>
 
-      <!-- 6. Event Countdown -->
+      <!-- Countdown -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">6. Upcoming Program Countdown</h3>
         <input type="text" id="admin-event-title" placeholder="Event Title" class="w-full border p-2 rounded text-sm mb-2" required>
@@ -142,7 +161,7 @@
         <textarea id="admin-event-desc" placeholder="Event Description" class="w-full border p-2 rounded text-sm"></textarea>
       </div>
 
-      <!-- 7. FAQs -->
+      <!-- FAQs -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <div class="flex justify-between items-center mb-4 border-b pb-2">
           <h3 class="text-lg font-bold text-slate-900">7. Frequently Asked Questions</h3>
@@ -151,7 +170,7 @@
         <div id="faq-editor-container" class="space-y-4"></div>
       </div>
 
-      <!-- 8. Contacts & Socials -->
+      <!-- Contacts & Socials -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">8. Contact Details & Social Media Embeds</h3>
         <div class="grid md:grid-cols-2 gap-4 mb-4">
@@ -167,7 +186,7 @@
         </div>
       </div>
 
-      <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl shadow-lg text-lg transition">Publish All Changes Live</button>
+      <button type="submit" id="save-btn" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl shadow-lg text-lg transition">Publish All Changes Globally</button>
     </form>
   </div>
 
@@ -202,14 +221,24 @@
       if (newUser && newPass) {
         localStorage.setItem('adminCredentials', JSON.stringify({ user: newUser, pass: newPass }));
         alert(`Credentials updated successfully!`);
-        document.getElementById('new-admin-email').value = '';
-        document.getElementById('new-admin-pass').value = '';
       }
+    }
+
+    function saveCloudConfig() {
+      const k = document.getElementById('jsonbin-key').value.trim();
+      const b = document.getElementById('jsonbin-bin').value.trim();
+      localStorage.setItem('jsonbin_api_key', k);
+      localStorage.setItem('jsonbin_bin_id', b);
+      alert('Cloud JSONBin Configuration Saved!');
     }
 
     function showDashboard() {
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard-screen').classList.remove('hidden');
+      
+      document.getElementById('jsonbin-key').value = localStorage.getItem('jsonbin_api_key') || "";
+      document.getElementById('jsonbin-bin').value = localStorage.getItem('jsonbin_bin_id') || "";
+
       loadAndPopulateForm();
     }
 
@@ -218,9 +247,21 @@
       location.reload();
     }
 
-    function loadAndPopulateForm() {
-      const stored = localStorage.getItem('churchWebsiteData');
-      churchData = stored ? JSON.parse(stored) : {};
+    async function loadAndPopulateForm() {
+      const binId = localStorage.getItem('jsonbin_bin_id');
+      const apiKey = localStorage.getItem('jsonbin_api_key');
+
+      if (binId) {
+        try {
+          const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            headers: { "X-Master-Key": apiKey }
+          });
+          const json = await res.json();
+          churchData = json.record || {};
+        } catch(e) {
+          console.error("Cloud load error", e);
+        }
+      }
 
       document.getElementById('admin-site-name').value = churchData.siteName || "CHOICE SOULS MEDIA";
       document.getElementById('admin-site-desc').value = churchData.siteDescription || "";
@@ -248,9 +289,9 @@
       renderFaqFields();
 
       if (churchData.upcomingProgram) {
-        document.getElementById('admin-event-title').value = churchData.upcomingProgram.title;
-        document.getElementById('admin-event-date').value = churchData.upcomingProgram.date.slice(0, 16);
-        document.getElementById('admin-event-desc').value = churchData.upcomingProgram.description;
+        document.getElementById('admin-event-title').value = churchData.upcomingProgram.title || '';
+        document.getElementById('admin-event-date').value = churchData.upcomingProgram.date ? churchData.upcomingProgram.date.slice(0, 16) : '';
+        document.getElementById('admin-event-desc').value = churchData.upcomingProgram.description || '';
       }
 
       if (churchData.contacts) {
@@ -281,7 +322,6 @@
       }
     }
 
-    // Dynamic Service Cards
     function renderServiceCardFields() {
       const container = document.getElementById('service-cards-editor-container');
       container.innerHTML = '';
@@ -291,9 +331,9 @@
         container.innerHTML += `
           <div class="border p-4 rounded-lg bg-slate-50 relative">
             <button type="button" onclick="removeServiceCard(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
-            <input type="text" id="card-title-${i}" value="${card.title}" placeholder="Card Title (e.g. Registration)" class="w-full border p-2 rounded text-sm mb-2" required>
+            <input type="text" id="card-title-${i}" value="${card.title}" placeholder="Card Title" class="w-full border p-2 rounded text-sm mb-2" required>
             <textarea id="card-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2" required>${card.description}</textarea>
-            <input type="text" id="card-link-${i}" value="${card.link}" placeholder="Redirect URL Link (e.g. https://... or #contact)" class="w-full border p-2 rounded text-sm" required>
+            <input type="text" id="card-link-${i}" value="${card.link}" placeholder="Link URL" class="w-full border p-2 rounded text-sm" required>
           </div>`;
       });
     }
@@ -309,7 +349,6 @@
       renderServiceCardFields();
     }
 
-    // Dynamic Videos List
     function renderVideoFields() {
       const container = document.getElementById('videos-editor-container');
       container.innerHTML = '';
@@ -321,10 +360,10 @@
             <button type="button" onclick="removeVideo(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
             <div class="grid md:grid-cols-2 gap-2 mb-2">
               <input type="text" id="vid-title-${i}" value="${v.title}" placeholder="Sermon Title" class="border p-2 rounded text-sm" required>
-              <input type="text" id="vid-yt-${i}" value="${v.youtubeId}" placeholder="YouTube Video ID (e.g. M7lc1UVf-VE)" class="border p-2 rounded text-sm" required>
+              <input type="text" id="vid-yt-${i}" value="${v.youtubeId}" placeholder="YouTube Video ID" class="border p-2 rounded text-sm" required>
             </div>
             <textarea id="vid-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2">${v.description || ''}</textarea>
-            <input type="text" id="vid-date-${i}" value="${v.date || ''}" placeholder="Date / Tag (e.g. August 2026)" class="w-full border p-2 rounded text-sm">
+            <input type="text" id="vid-date-${i}" value="${v.date || ''}" placeholder="Date / Tag" class="w-full border p-2 rounded text-sm">
           </div>`;
       });
     }
@@ -340,7 +379,6 @@
       renderVideoFields();
     }
 
-    // Dynamic Fliers
     function renderFlierFields() {
       const container = document.getElementById('fliers-editor-container');
       container.innerHTML = '';
@@ -382,7 +420,6 @@
       }
     }
 
-    // Dynamic FAQs
     function renderFaqFields() {
       const container = document.getElementById('faq-editor-container');
       container.innerHTML = '';
@@ -407,10 +444,12 @@
       renderFaqFields();
     }
 
-    function saveData(e) {
+    async function saveData(e) {
       e.preventDefault();
+      const saveBtn = document.getElementById('save-btn');
+      saveBtn.innerText = "Publishing to Cloud...";
+      saveBtn.disabled = true;
 
-      // Collect Service Cards
       const updatedCards = [];
       const cardCount = document.getElementById('service-cards-editor-container').children.length;
       for (let i = 0; i < cardCount; i++) {
@@ -420,7 +459,6 @@
         if (title && description && link) updatedCards.push({ id: Date.now() + i, title, description, link });
       }
 
-      // Collect Videos
       const updatedVideos = [];
       const vidCount = document.getElementById('videos-editor-container').children.length;
       for (let i = 0; i < vidCount; i++) {
@@ -431,14 +469,12 @@
         if (title && youtubeId) updatedVideos.push({ id: Date.now() + i, title, youtubeId, description, date });
       }
 
-      // Collect Fliers
       const updatedFliers = (churchData.fliers || []).map((f, i) => ({
         id: Date.now() + i,
         title: document.getElementById(`flier-title-${i}`)?.value || f.title,
         url: f.url
       }));
 
-      // Collect FAQs
       const updatedFaqs = [];
       const faqCount = document.getElementById('faq-editor-container').children.length;
       for (let i = 0; i < faqCount; i++) {
@@ -478,8 +514,35 @@
         }
       };
 
+      const binId = localStorage.getItem('jsonbin_bin_id');
+      const apiKey = localStorage.getItem('jsonbin_api_key');
+
+      if (binId && apiKey) {
+        try {
+          const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': apiKey
+            },
+            body: JSON.stringify(churchData)
+          });
+
+          if (res.ok) {
+            alert("All website updates saved and published live across all devices globally!");
+          } else {
+            alert("Failed to sync to cloud. Check your JSONBin credentials.");
+          }
+        } catch (err) {
+          alert("Network error publishing to cloud. Changes saved locally.");
+        }
+      } else {
+        alert("JSONBin API credentials missing! Changes saved locally only. Please enter Bin ID and API Key above.");
+      }
+
       localStorage.setItem('churchWebsiteData', JSON.stringify(churchData));
-      alert("All website updates saved successfully!");
+      saveBtn.innerText = "Publish All Changes Globally";
+      saveBtn.disabled = false;
     }
 
     if (sessionStorage.getItem('adminLoggedIn') === 'true') {
