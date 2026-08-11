@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sermons & Previous Videos | CHOICE SOULS MEDIA</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
 
@@ -39,57 +42,56 @@
   </main>
 
   <script>
-    async function loadArchive() {
-      const binId = localStorage.getItem('jsonbin_bin_id');
-      const apiKey = localStorage.getItem('jsonbin_api_key');
-      let data = {};
+    // Paste your Firebase Config object here
+    const firebaseConfig = {
+      apiKey: "AIzaSyAK4oFHPdcmZvb6Gsis_2XSy4ljbJp7dkA",
+      authDomain: "choice-souls-media.firebaseapp.com",
+      databaseURL: "https://choice-souls-media-default-rtdb.firebaseio.com/",
+      projectId: "choice-souls-media",
+      storageBucket: "choice-souls-media.firebasestorage.app",
+      messagingSenderId: "317717012894",
+      appId: "1:317717012894:web:682450a305ad630ea9368f"
+      measurementId: "G-37TWV4WJQJ"
+    };
 
-      if (binId) {
-        try {
-          const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-            headers: { "X-Master-Key": apiKey }
-          });
-          const json = await res.json();
-          data = json.record || {};
-        } catch (e) {
-          const stored = localStorage.getItem('churchWebsiteData');
-          if (stored) data = JSON.parse(stored);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function loadArchive() {
+      db.ref('churchData').on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+
+        document.getElementById('site-name').innerText = data.siteName || "CHOICE SOULS MEDIA";
+        if (data.siteLogo) {
+          const logo = document.getElementById('site-logo');
+          logo.src = data.siteLogo;
+          logo.classList.remove('hidden');
         }
-      } else {
-        const stored = localStorage.getItem('churchWebsiteData');
-        if (stored) data = JSON.parse(stored);
-      }
 
-      document.getElementById('site-name').innerText = data.siteName || "CHOICE SOULS MEDIA";
-      if (data.siteLogo) {
-        const logo = document.getElementById('site-logo');
-        logo.src = data.siteLogo;
-        logo.classList.remove('hidden');
-      }
+        const grid = document.getElementById('archive-video-grid');
+        grid.innerHTML = '';
+        const videos = data.videos || [];
 
-      const grid = document.getElementById('archive-video-grid');
-      grid.innerHTML = '';
-      const videos = data.videos || [];
-
-      if (videos.length > 0) {
-        playArchiveVideo(videos[0].youtubeId);
-        videos.forEach(vid => {
-          grid.innerHTML += `
-            <div onclick="playArchiveVideo('${vid.youtubeId}')" class="bg-white p-5 rounded-xl border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow-md cursor-pointer transition flex flex-col justify-between">
-              <div>
-                <span class="text-xs font-semibold text-amber-600">${vid.date || 'Sermon'}</span>
-                <h3 class="font-bold text-slate-900 text-lg mt-1 mb-2">${vid.title}</h3>
-                <p class="text-xs text-slate-600 mb-4 line-clamp-2">${vid.description || 'No description available.'}</p>
-              </div>
-              <div class="flex justify-between items-center border-t pt-3 text-xs font-bold text-amber-600">
-                <span>Watch Video</span>
-                <span>▶</span>
-              </div>
-            </div>`;
-        });
-      } else {
-        grid.innerHTML = `<p class="text-slate-500">No videos available in archive yet.</p>`;
-      }
+        if (videos.length > 0) {
+          playArchiveVideo(videos[0].youtubeId);
+          videos.forEach(vid => {
+            grid.innerHTML += `
+              <div onclick="playArchiveVideo('${vid.youtubeId}')" class="bg-white p-5 rounded-xl border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow-md cursor-pointer transition flex flex-col justify-between">
+                <div>
+                  <span class="text-xs font-semibold text-amber-600">${vid.date || 'Sermon'}</span>
+                  <h3 class="font-bold text-slate-900 text-lg mt-1 mb-2">${vid.title}</h3>
+                  <p class="text-xs text-slate-600 mb-4 line-clamp-2">${vid.description || 'No description available.'}</p>
+                </div>
+                <div class="flex justify-between items-center border-t pt-3 text-xs font-bold text-amber-600">
+                  <span>Watch Video</span>
+                  <span>▶</span>
+                </div>
+              </div>`;
+          });
+        } else {
+          grid.innerHTML = `<p class="text-slate-500">No videos available in archive yet.</p>`;
+        }
+      });
     }
 
     function playArchiveVideo(id) {
