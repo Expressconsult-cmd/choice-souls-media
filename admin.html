@@ -28,7 +28,7 @@
         </div>
         <button type="submit" class="w-full bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold py-3 rounded-lg shadow transition">Login to Control Panel</button>
       </form>
-      <p class="text-xs text-center text-slate-400 mt-4">Forgot login — Contact The Admin
+      <p class="text-xs text-center text-slate-400 mt-4">Default login — Username: <b>admin</b> | Password: <b>admin</b></p>
     </div>
   </div>
 
@@ -72,7 +72,7 @@
         <div class="grid md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold mb-1">Website Name</label>
-            <input type="text" id="admin-site-name" class="w-full border p-2 rounded text-sm mb-3" required>
+            <input type="text" id="admin-site-name" class="w-full border p-2 rounded text-sm mb-3">
             <label class="block text-xs font-bold mb-1">Website Description / Motto</label>
             <textarea id="admin-site-desc" class="w-full border p-2 rounded text-sm" rows="2"></textarea>
           </div>
@@ -113,7 +113,7 @@
         <div class="grid md:grid-cols-2 gap-4 mb-4 bg-slate-50 p-4 rounded-lg">
           <div>
             <label class="block text-xs font-bold mb-1">Slide Display Duration (Seconds)</label>
-            <input type="number" id="admin-flier-duration" min="1" max="20" class="w-full border p-2 rounded text-sm" required>
+            <input type="number" id="admin-flier-duration" min="1" max="20" class="w-full border p-2 rounded text-sm">
           </div>
           <div>
             <label class="block text-xs font-bold mb-1">Transition Animation Effect</label>
@@ -130,8 +130,14 @@
 
       <!-- Announcement -->
       <div class="bg-white p-6 rounded-xl shadow border">
-        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">5. Announcement Bar</h3>
-        <input type="text" id="admin-announcement" class="w-full border p-2 rounded text-sm mb-2" required>
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-slate-900">5. Announcement Bar</h3>
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer select-none">
+            <input type="checkbox" id="admin-announcement-enabled" onchange="updateAnnouncementToggleLabel()" class="w-4 h-4 accent-amber-500" checked>
+            <span id="announcement-toggle-label">👁️ Visible on site</span>
+          </label>
+        </div>
+        <input type="text" id="admin-announcement" placeholder="Announcement text" class="w-full border p-2 rounded text-sm mb-2">
         <select id="admin-announcement-effect" class="w-full border p-2 rounded text-sm">
           <option value="scroll">Scrolling Effect</option>
           <option value="breathe">Breathing Effect</option>
@@ -141,8 +147,8 @@
       <!-- Countdown -->
       <div class="bg-white p-6 rounded-xl shadow border">
         <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">6. Upcoming Program Countdown</h3>
-        <input type="text" id="admin-event-title" placeholder="Event Title" class="w-full border p-2 rounded text-sm mb-2" required>
-        <input type="datetime-local" id="admin-event-date" class="w-full border p-2 rounded text-sm mb-2" required>
+        <input type="text" id="admin-event-title" placeholder="Event Title" class="w-full border p-2 rounded text-sm mb-2">
+        <input type="datetime-local" id="admin-event-date" class="w-full border p-2 rounded text-sm mb-2">
         <textarea id="admin-event-desc" placeholder="Event Description" class="w-full border p-2 rounded text-sm"></textarea>
       </div>
 
@@ -241,6 +247,12 @@
       loadAndPopulateForm();
     }
 
+    function updateAnnouncementToggleLabel() {
+      const checkbox = document.getElementById('admin-announcement-enabled');
+      const label = document.getElementById('announcement-toggle-label');
+      label.innerText = checkbox.checked ? '👁️ Visible on site' : '🚫 Hidden from site';
+    }
+
     function logout() {
       sessionStorage.removeItem('adminLoggedIn');
       location.reload();
@@ -263,7 +275,9 @@
         if (churchData.announcements && churchData.announcements[0]) {
           document.getElementById('admin-announcement').value = churchData.announcements[0].text || "";
           document.getElementById('admin-announcement-effect').value = churchData.announcements[0].effect || "scroll";
+          document.getElementById('admin-announcement-enabled').checked = churchData.announcements[0].enabled !== false;
         }
+        updateAnnouncementToggleLabel();
 
         renderServiceCardFields();
         renderVideoFields();
@@ -319,20 +333,33 @@
         container.innerHTML += `
           <div class="border p-4 rounded-lg bg-slate-50 relative">
             <button type="button" onclick="removeServiceCard(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
-            <input type="text" id="card-title-${i}" value="${card.title || ''}" placeholder="Card Title" class="w-full border p-2 rounded text-sm mb-2" required>
-            <textarea id="card-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2" required>${card.description || ''}</textarea>
-            <input type="text" id="card-link-${i}" value="${card.link || ''}" placeholder="Link URL" class="w-full border p-2 rounded text-sm" required>
+            <input type="text" id="card-title-${i}" value="${card.title || ''}" placeholder="Card Title" class="w-full border p-2 rounded text-sm mb-2">
+            <textarea id="card-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2">${card.description || ''}</textarea>
+            <input type="text" id="card-link-${i}" value="${card.link || ''}" placeholder="Link URL" class="w-full border p-2 rounded text-sm">
           </div>`;
       });
     }
 
+    function syncServiceCardsFromDOM() {
+      (churchData.serviceCards || []).forEach((card, i) => {
+        const t = document.getElementById(`card-title-${i}`);
+        const d = document.getElementById(`card-desc-${i}`);
+        const l = document.getElementById(`card-link-${i}`);
+        if (t) card.title = t.value;
+        if (d) card.description = d.value;
+        if (l) card.link = l.value;
+      });
+    }
+
     function addServiceCardField() {
+      syncServiceCardsFromDOM();
       if (!churchData.serviceCards) churchData.serviceCards = [];
       churchData.serviceCards.push({ title: "New Service", description: "Service details...", link: "#" });
       renderServiceCardFields();
     }
 
     function removeServiceCard(i) {
+      syncServiceCardsFromDOM();
       churchData.serviceCards.splice(i, 1);
       renderServiceCardFields();
     }
@@ -347,8 +374,8 @@
           <div class="border p-4 rounded-lg bg-slate-50 relative">
             <button type="button" onclick="removeVideo(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
             <div class="grid md:grid-cols-2 gap-2 mb-2">
-              <input type="text" id="vid-title-${i}" value="${v.title || ''}" placeholder="Sermon Title" class="border p-2 rounded text-sm" required>
-              <input type="text" id="vid-yt-${i}" value="${v.youtubeId || ''}" placeholder="YouTube Video ID" class="border p-2 rounded text-sm" required>
+              <input type="text" id="vid-title-${i}" value="${v.title || ''}" placeholder="Sermon Title" class="border p-2 rounded text-sm">
+              <input type="text" id="vid-yt-${i}" value="${v.youtubeId || ''}" placeholder="YouTube Video ID" class="border p-2 rounded text-sm">
             </div>
             <textarea id="vid-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2">${v.description || ''}</textarea>
             <input type="text" id="vid-date-${i}" value="${v.date || ''}" placeholder="Date / Tag" class="w-full border p-2 rounded text-sm">
@@ -356,13 +383,28 @@
       });
     }
 
+    function syncVideosFromDOM() {
+      (churchData.videos || []).forEach((v, i) => {
+        const t = document.getElementById(`vid-title-${i}`);
+        const y = document.getElementById(`vid-yt-${i}`);
+        const d = document.getElementById(`vid-desc-${i}`);
+        const dt = document.getElementById(`vid-date-${i}`);
+        if (t) v.title = t.value;
+        if (y) v.youtubeId = y.value;
+        if (d) v.description = d.value;
+        if (dt) v.date = dt.value;
+      });
+    }
+
     function addVideoField() {
+      syncVideosFromDOM();
       if (!churchData.videos) churchData.videos = [];
       churchData.videos.push({ title: "New Message", description: "", youtubeId: "", date: "2026" });
       renderVideoFields();
     }
 
     function removeVideo(i) {
+      syncVideosFromDOM();
       churchData.videos.splice(i, 1);
       renderVideoFields();
     }
@@ -378,20 +420,29 @@
             <button type="button" onclick="removeFlier(${index})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
             <img id="flier-preview-${index}" src="${flier.url}" class="w-32 h-20 object-cover rounded border" alt="Preview">
             <div class="w-full">
-              <input type="text" id="flier-title-${index}" value="${flier.title || ''}" placeholder="Flier Event Title" class="w-full border p-2 rounded text-sm mb-2" required>
+              <input type="text" id="flier-title-${index}" value="${flier.title || ''}" placeholder="Flier Event Title" class="w-full border p-2 rounded text-sm mb-2">
               <input type="file" accept="image/*" onchange="uploadFlierImage(event, ${index})" class="w-full border p-1 rounded text-xs">
             </div>
           </div>`;
       });
     }
 
+    function syncFliersFromDOM() {
+      (churchData.fliers || []).forEach((f, i) => {
+        const t = document.getElementById(`flier-title-${i}`);
+        if (t) f.title = t.value;
+      });
+    }
+
     function addFlierField() {
+      syncFliersFromDOM();
       if (!churchData.fliers) churchData.fliers = [];
       churchData.fliers.push({ title: "New Program Flier", url: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=1200&q=80" });
       renderFlierFields();
     }
 
     function removeFlier(index) {
+      syncFliersFromDOM();
       churchData.fliers.splice(index, 1);
       renderFlierFields();
     }
@@ -415,19 +466,30 @@
         container.innerHTML += `
           <div class="border p-3 rounded-lg bg-slate-50 relative">
             <button type="button" onclick="removeFaq(${index})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
-            <input type="text" id="faq-q-${index}" value="${faq.question || ''}" placeholder="Question" class="w-full border p-2 rounded text-sm mb-2 pr-16" required>
-            <textarea id="faq-a-${index}" placeholder="Answer" class="w-full border p-2 rounded text-sm" rows="2" required>${faq.answer || ''}</textarea>
+            <input type="text" id="faq-q-${index}" value="${faq.question || ''}" placeholder="Question" class="w-full border p-2 rounded text-sm mb-2 pr-16">
+            <textarea id="faq-a-${index}" placeholder="Answer" class="w-full border p-2 rounded text-sm" rows="2">${faq.answer || ''}</textarea>
           </div>`;
       });
     }
 
+    function syncFaqsFromDOM() {
+      (churchData.faqs || []).forEach((faq, i) => {
+        const q = document.getElementById(`faq-q-${i}`);
+        const a = document.getElementById(`faq-a-${i}`);
+        if (q) faq.question = q.value;
+        if (a) faq.answer = a.value;
+      });
+    }
+
     function addFaqField() {
+      syncFaqsFromDOM();
       if (!churchData.faqs) churchData.faqs = [];
       churchData.faqs.push({ question: "", answer: "" });
       renderFaqFields();
     }
 
     function removeFaq(index) {
+      syncFaqsFromDOM();
       churchData.faqs.splice(index, 1);
       renderFaqFields();
     }
@@ -475,7 +537,7 @@
         siteName: document.getElementById('admin-site-name').value,
         siteDescription: document.getElementById('admin-site-desc').value,
         siteLogo: currentBase64Logo,
-        announcements: [{ id: 1, text: document.getElementById('admin-announcement').value, effect: document.getElementById('admin-announcement-effect').value }],
+        announcements: [{ id: 1, text: document.getElementById('admin-announcement').value, effect: document.getElementById('admin-announcement-effect').value, enabled: document.getElementById('admin-announcement-enabled').checked }],
         serviceCards: updatedCards,
         fliersConfig: {
           duration: parseInt(document.getElementById('admin-flier-duration').value) || 4,
