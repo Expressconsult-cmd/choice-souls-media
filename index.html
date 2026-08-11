@@ -84,9 +84,7 @@
         <span class="text-xs font-bold uppercase tracking-widest text-amber-600">Quick Access</span>
         <h2 class="text-3xl font-extrabold text-slate-900 mt-1">Our Quick Services & Hubs</h2>
       </div>
-      <div id="services-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Rendered dynamically -->
-      </div>
+      <div id="services-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
   </section>
 
@@ -201,40 +199,31 @@
   </footer>
 
   <script>
-    const defaultData = {
-      siteName: "CHOICE SOULS MEDIA",
-      siteDescription: "Growing in Faith, Living in Hope, and Walking in Love.",
-      siteLogo: "",
-      announcements: [{ id: 1, text: "Welcome to Choice Souls Media! Stream our live services weekly.", effect: "scroll" }],
-      serviceCards: [
-        { id: 1, title: "Membership Registration", description: "Register as an official member of our digital and global ministry family.", link: "#" },
-        { id: 2, title: "General Enquiries & Support", description: "Get answers to your questions, prayer requests, or counseling needs.", link: "#" },
-        { id: 3, title: "Media & Broadcast Hub", description: "Access live streams, audio sermons, and church media resources.", link: "videos.html" }
-      ],
-      fliersConfig: { duration: 4, effect: "slide" },
-      fliers: [
-        { id: 1, title: "Sunday Power & Prophetic Service", url: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=1200&q=80" },
-        { id: 2, title: "Night of Anointed Praise", url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80" }
-      ],
-      upcomingProgram: { title: "Global Faith & Media Summit 2026", date: "2026-10-15T18:00:00", description: "An extraordinary gathering of faith and digital gospel transformation." },
-      videos: [
-        { id: 1, title: "Unlocking Divine Favour", description: "A powerful sermon on stepping into covenant blessings.", youtubeId: "M7lc1UVf-VE", date: "August 2026" },
-        { id: 2, title: "Walking in Faith and Power", description: "Discover how to activate your spiritual authority.", youtubeId: "M7lc1UVf-VE", date: "July 2026" }
-      ],
-      faqs: [{ id: 1, question: "How can I join Choice Souls Media online?", answer: "You can use our Registration service card above or follow our live sermon streams." }],
-      contacts: { email: "info@choicesoulsmedia.org", phone: "+234 800 000 0000", whatsapp: "2348000000000", address: "Lagos, Nigeria" },
-      socials: { facebook: "https://facebook.com", instagram: "https://instagram.com", youtube: "https://youtube.com" }
-    };
+    const JSONBIN_BIN_ID = localStorage.getItem('jsonbin_bin_id') || "";
+    const JSONBIN_API_KEY = localStorage.getItem('jsonbin_api_key') || "";
 
     let churchData = {};
     let countdownInterval;
     let carouselInterval;
     let currentSlideIndex = 0;
 
-    function loadData() {
-      const stored = localStorage.getItem('churchWebsiteData');
-      churchData = stored ? JSON.parse(stored) : defaultData;
-      if (!stored) localStorage.setItem('churchWebsiteData', JSON.stringify(defaultData));
+    async function loadData() {
+      if (JSONBIN_BIN_ID) {
+        try {
+          const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+            headers: { "X-Master-Key": JSONBIN_API_KEY }
+          });
+          const json = await res.json();
+          churchData = json.record || {};
+        } catch (e) {
+          console.error("Cloud fetch failed, using local storage", e);
+          const stored = localStorage.getItem('churchWebsiteData');
+          if (stored) churchData = JSON.parse(stored);
+        }
+      } else {
+        const stored = localStorage.getItem('churchWebsiteData');
+        if (stored) churchData = JSON.parse(stored);
+      }
       renderFrontend();
     }
 
@@ -250,15 +239,13 @@
         logoImg.classList.remove('hidden');
       }
 
-      // Announcements
       const annContainer = document.getElementById('announcement-content');
-      const activeAnn = churchData.announcements[0];
+      const activeAnn = churchData.announcements ? churchData.announcements[0] : null;
       if (activeAnn) {
         annContainer.innerText = activeAnn.text;
         annContainer.className = "text-center text-sm font-semibold " + (activeAnn.effect === 'scroll' ? 'animate-marquee' : 'animate-breathe text-amber-300');
       }
 
-      // Service Cards
       const servicesGrid = document.getElementById('services-grid');
       servicesGrid.innerHTML = '';
       (churchData.serviceCards || []).forEach(card => {
@@ -277,13 +264,11 @@
 
       setupCarousel();
 
-      // Countdown
-      const prog = churchData.upcomingProgram;
-      document.getElementById('event-title').innerText = prog.title;
-      document.getElementById('event-desc').innerText = prog.description;
-      startCountdown(prog.date);
+      const prog = churchData.upcomingProgram || {};
+      document.getElementById('event-title').innerText = prog.title || '';
+      document.getElementById('event-desc').innerText = prog.description || '';
+      if (prog.date) startCountdown(prog.date);
 
-      // Sermons
       const videoGrid = document.getElementById('video-grid');
       videoGrid.innerHTML = '';
       if (churchData.videos && churchData.videos.length > 0) {
@@ -298,7 +283,6 @@
         });
       }
 
-      // FAQs
       const faqContainer = document.getElementById('faq-container');
       faqContainer.innerHTML = '';
       (churchData.faqs || []).forEach(faq => {
@@ -309,7 +293,6 @@
           </div>`;
       });
 
-      // Contacts & Socials
       const c = churchData.contacts || {};
       const s = churchData.socials || {};
       document.getElementById('contact-email').innerText = c.email || '-';
