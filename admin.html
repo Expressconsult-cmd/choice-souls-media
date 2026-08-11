@@ -24,10 +24,11 @@
         </div>
         <div>
           <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Password</label>
-          <input type="password" id="login-password" class="w-full border p-2.5 rounded-lg text-sm" placeholder="••••••••" required>
+          <input type="password" id="login-password" class="w-full border p-2.5 rounded-lg text-sm" placeholder="admin" required>
         </div>
         <button type="submit" class="w-full bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold py-3 rounded-lg shadow transition">Login to Control Panel</button>
       </form>
+      <p class="text-xs text-center text-slate-400 mt-4">Default login — Username: <b>admin</b> | Password: <b>admin</b></p>
     </div>
   </div>
 
@@ -179,7 +180,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyAK4oFHPdcmZvb6Gsis_2XSy4ljbJp7dkA",
       authDomain: "choice-souls-media.firebaseapp.com",
-      databaseURL: "https://choice-souls-media-default-rtdb.firebaseio.com/",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
       projectId: "choice-souls-media",
       storageBucket: "choice-souls-media.firebasestorage.app",
       messagingSenderId: "317717012894",
@@ -193,9 +194,15 @@
     let churchData = {};
     let currentBase64Logo = "";
 
+    // Always ensures admin/admin exists if not previously set
     function getCredentials() {
       const storedCreds = localStorage.getItem('adminCredentials');
-      return storedCreds ? JSON.parse(storedCreds) : { user: "admin", pass: "admin" };
+      if (!storedCreds) {
+        const defaultCreds = { user: "admin", pass: "admin" };
+        localStorage.setItem('adminCredentials', JSON.stringify(defaultCreds));
+        return defaultCreds;
+      }
+      return JSON.parse(storedCreds);
     }
 
     function handleLogin(e) {
@@ -204,11 +211,14 @@
       const inputPass = document.getElementById('login-password').value.trim();
       const currentCreds = getCredentials();
 
-      if (inputUser === currentCreds.user && inputPass === currentCreds.pass) {
+      if (
+        inputUser.toLowerCase() === currentCreds.user.toLowerCase() && 
+        inputPass === currentCreds.pass
+      ) {
         sessionStorage.setItem('adminLoggedIn', 'true');
         showDashboard();
       } else {
-        alert('Invalid login credentials.');
+        alert(`Invalid credentials. Use Username: admin and Password: admin`);
       }
     }
 
@@ -219,7 +229,9 @@
 
       if (newUser && newPass) {
         localStorage.setItem('adminCredentials', JSON.stringify({ user: newUser, pass: newPass }));
-        alert(`Credentials updated successfully!`);
+        alert("Credentials updated successfully! Use your new login details next time.");
+        document.getElementById('new-admin-email').value = "";
+        document.getElementById('new-admin-pass').value = "";
       }
     }
 
@@ -502,6 +514,7 @@
       saveBtn.disabled = false;
     }
 
+    // Auto-login check if already authenticated during current browser session
     if (sessionStorage.getItem('adminLoggedIn') === 'true') {
       showDashboard();
     }
