@@ -43,8 +43,8 @@
 <body class="bg-slate-50 text-slate-800 font-sans overflow-x-hidden">
 
   <!-- Dynamic Announcement Bar -->
-  <div id="announcement-bar" class="bg-slate-900 text-amber-400 border-b border-amber-500/20 py-2 px-4 shadow-md">
-    <div id="announcement-content" class="text-center text-sm font-semibold">Loading announcements...</div>
+  <div id="announcement-bar" class="bg-slate-900 text-amber-400 border-b border-amber-500/20 py-2 px-4 shadow-md overflow-hidden h-[34px] flex items-center">
+    <div id="announcement-content" class="text-center text-sm font-semibold w-full truncate">Loading announcements...</div>
   </div>
 
   <!-- Navigation -->
@@ -81,12 +81,12 @@
   </nav>
 
   <!-- Hero Section -->
-  <section id="hero" class="bg-slate-900 text-white py-20 text-center px-4 relative overflow-hidden">
+  <section id="hero" class="bg-slate-900 text-white py-14 sm:py-20 text-center px-4 relative overflow-hidden">
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent"></div>
     <div class="max-w-4xl mx-auto relative z-10">
-      <h2 id="hero-title" class="text-4xl md:text-6xl font-extrabold mb-4 text-white tracking-tight">CHOICE SOULS MEDIA</h2>
-      <p id="hero-desc" class="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-slate-300">Growing in Faith, Living in Hope, and Walking in Love.</p>
-      <div class="flex flex-wrap justify-center gap-4">
+      <h2 id="hero-title" class="text-3xl sm:text-4xl md:text-6xl font-extrabold mb-4 text-white tracking-tight break-words">CHOICE SOULS MEDIA</h2>
+      <p id="hero-desc" class="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-8 text-slate-300">Growing in Faith, Living in Hope, and Walking in Love.</p>
+      <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
         <a href="#services" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-lg transition">Explore Services</a>
         <a href="videos.html" class="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold px-7 py-3.5 rounded-xl shadow-lg transition">Watch Sermon Archive</a>
       </div>
@@ -94,8 +94,8 @@
   </section>
 
   <!-- Service Cards Section -->
-  <section id="services" class="py-16 bg-slate-100">
-    <div class="max-w-7xl mx-auto px-4">
+  <section id="services" class="py-12 sm:py-16 bg-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
         <span class="text-xs font-bold uppercase tracking-widest text-amber-600">Quick Access</span>
         <h2 class="text-3xl font-extrabold text-slate-900 mt-1">Our Quick Services & Hubs</h2>
@@ -105,8 +105,8 @@
   </section>
 
   <!-- Flier Carousel Section -->
-  <section id="fliers-section" class="py-16 bg-slate-950 text-white">
-    <div class="max-w-5xl mx-auto px-4">
+  <section id="fliers-section" class="py-12 sm:py-16 bg-slate-950 text-white">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-8">
         <span class="text-xs font-bold uppercase tracking-widest text-amber-400">Featured Media</span>
         <h2 class="text-3xl font-extrabold text-white">Upcoming Programs & Announcements</h2>
@@ -128,10 +128,10 @@
   </section>
 
   <!-- Countdown Section -->
-  <section id="countdown" class="py-16 bg-white text-center border-b">
-    <div class="max-w-4xl mx-auto px-4">
+  <section id="countdown" class="py-12 sm:py-16 bg-white text-center border-b">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <span class="text-xs font-bold uppercase tracking-wider text-amber-600">Upcoming Program</span>
-      <h2 id="event-title" class="text-3xl font-bold mt-1 mb-3 text-slate-900">Loading event...</h2>
+      <h2 id="event-title" class="text-2xl sm:text-3xl font-bold mt-1 mb-3 text-slate-900 break-words px-2">Loading event...</h2>
       <p id="event-desc" class="text-slate-600 mb-8 max-w-xl mx-auto">Loading details...</p>
       
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-lg mx-auto">
@@ -144,8 +144,8 @@
   </section>
 
   <!-- Sermons Preview & Archive Redirect -->
-  <section id="videos" class="py-16 bg-slate-50">
-    <div class="max-w-6xl mx-auto px-4">
+  <section id="videos" class="py-12 sm:py-16 bg-slate-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-8">
         <div>
           <span class="text-xs font-bold uppercase tracking-widest text-amber-600">Gospel Messages</span>
@@ -183,7 +183,7 @@
     <div class="max-w-5xl mx-auto px-4 text-center">
       <h2 class="text-3xl font-bold mb-8">Connect With Us</h2>
       
-      <div class="grid md:grid-cols-4 gap-6 mb-12">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-12">
         <div class="p-5 border border-slate-800 rounded-xl bg-slate-900/60 flex flex-col items-center">
           <svg class="w-6 h-6 text-amber-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
           <p class="text-xs uppercase text-slate-400 font-bold mb-1">Email</p>
@@ -280,7 +280,9 @@
       if (activeAnn && activeAnn.enabled !== false && activeAnn.text) {
         annBar.classList.remove('hidden');
         annContainer.innerText = activeAnn.text;
-        annContainer.className = "text-center text-sm font-semibold " + (activeAnn.effect === 'scroll' ? 'animate-marquee' : 'animate-breathe text-amber-300');
+        annContainer.className = activeAnn.effect === 'scroll'
+          ? "text-sm font-semibold animate-marquee"
+          : "text-sm font-semibold text-amber-300 animate-breathe w-full truncate text-center block";
       } else {
         annBar.classList.add('hidden');
       }
