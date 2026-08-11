@@ -30,23 +30,35 @@
 
   <!-- Video Player & List -->
   <main class="max-w-6xl mx-auto px-4 py-12">
-    <!-- Active Video Player -->
     <div class="bg-slate-950 rounded-2xl overflow-hidden shadow-2xl aspect-video max-w-4xl mx-auto mb-10 border border-slate-800">
       <iframe id="archive-player" class="w-full h-full" src="" frameborder="0" allowfullscreen></iframe>
     </div>
 
-    <!-- Videos List -->
     <h2 class="text-2xl font-bold text-slate-900 mb-6">All Available Messages</h2>
-    <div id="archive-video-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Dynamically Rendered -->
-    </div>
+    <div id="archive-video-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </main>
 
   <script>
-    function loadArchive() {
-      const stored = localStorage.getItem('churchWebsiteData');
-      if (!stored) return;
-      const data = JSON.parse(stored);
+    async function loadArchive() {
+      const binId = localStorage.getItem('jsonbin_bin_id');
+      const apiKey = localStorage.getItem('jsonbin_api_key');
+      let data = {};
+
+      if (binId) {
+        try {
+          const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            headers: { "X-Master-Key": apiKey }
+          });
+          const json = await res.json();
+          data = json.record || {};
+        } catch (e) {
+          const stored = localStorage.getItem('churchWebsiteData');
+          if (stored) data = JSON.parse(stored);
+        }
+      } else {
+        const stored = localStorage.getItem('churchWebsiteData');
+        if (stored) data = JSON.parse(stored);
+      }
 
       document.getElementById('site-name').innerText = data.siteName || "CHOICE SOULS MEDIA";
       if (data.siteLogo) {
