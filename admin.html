@@ -28,7 +28,7 @@
         </div>
         <button type="submit" class="w-full bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold py-3 rounded-lg shadow transition">Login to Control Panel</button>
       </form>
-      <p class="text-xs text-center text-slate-400 mt-4">Forgot login — Contact Admin
+      <p class="text-xs text-center text-slate-400 mt-4">Forgot Login? - Contact Admin</p
     </div>
   </div>
 
@@ -162,9 +162,36 @@
         <div id="faq-editor-container" class="space-y-4"></div>
       </div>
 
+      <!-- Giving / Partnership Cards -->
+      <div class="bg-white p-6 rounded-xl shadow border">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-slate-900">8. Giving / Partnership Cards</h3>
+          <button type="button" onclick="addGivingCardField()" class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded hover:bg-amber-200">+ Add Card</button>
+        </div>
+        <div class="mb-4">
+          <label class="block text-xs font-bold mb-1 text-slate-700">Section Tag / Heading</label>
+          <input type="text" id="admin-giving-title" placeholder="GIVE TO THE WORK OF GOD" class="w-full border p-2 rounded text-sm">
+        </div>
+        <div id="giving-cards-editor-container" class="space-y-4"></div>
+      </div>
+
+      <!-- Testimonies Management -->
+      <div class="bg-white p-6 rounded-xl shadow border border-amber-200">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="text-lg font-bold text-slate-900">9. Testimonies</h3>
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer select-none">
+            <input type="checkbox" id="admin-testimonies-enabled" onchange="updateTestimoniesToggleLabel()" class="w-4 h-4 accent-amber-500" checked>
+            <span id="testimonies-toggle-label">👁️ Accepting submissions</span>
+          </label>
+        </div>
+        <p class="text-xs text-slate-500 mb-3">Testimonies are submitted by visitors on the Testimonies page and stored separately — this list updates live and does not require clicking "Publish" below.</p>
+        <div id="testimonies-admin-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+        <p id="testimonies-empty-msg" class="hidden text-sm text-slate-400 text-center py-4">No testimonies submitted yet.</p>
+      </div>
+
       <!-- Contacts & Socials -->
       <div class="bg-white p-6 rounded-xl shadow border">
-        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">8. Contact Details & Social Media Embeds</h3>
+        <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">10. Contact Details & Social Media Embeds</h3>
         <div class="grid md:grid-cols-2 gap-4 mb-4">
           <input type="email" id="admin-email" placeholder="Email Address" class="border p-2 rounded text-sm">
           <input type="text" id="admin-phone" placeholder="Phone Number" class="border p-2 rounded text-sm">
@@ -246,12 +273,61 @@
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard-screen').classList.remove('hidden');
       loadAndPopulateForm();
+      loadTestimoniesAdmin();
     }
 
     function updateAnnouncementToggleLabel() {
       const checkbox = document.getElementById('admin-announcement-enabled');
       const label = document.getElementById('announcement-toggle-label');
       label.innerText = checkbox.checked ? '👁️ Visible on site' : '🚫 Hidden from site';
+    }
+
+    function updateTestimoniesToggleLabel() {
+      const checkbox = document.getElementById('admin-testimonies-enabled');
+      const label = document.getElementById('testimonies-toggle-label');
+      label.innerText = checkbox.checked ? '👁️ Accepting submissions' : '🚫 Submissions closed';
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.innerText = str;
+      return div.innerHTML;
+    }
+
+    function loadTestimoniesAdmin() {
+      db.ref('testimonies').orderByChild('timestamp').on('value', (snapshot) => {
+        const listEl = document.getElementById('testimonies-admin-list');
+        const emptyMsg = document.getElementById('testimonies-empty-msg');
+        const entries = [];
+        snapshot.forEach((child) => {
+          entries.push({ key: child.key, ...child.val() });
+        });
+        entries.reverse();
+
+        if (entries.length === 0) {
+          listEl.innerHTML = '';
+          emptyMsg.classList.remove('hidden');
+          return;
+        }
+        emptyMsg.classList.add('hidden');
+
+        listEl.innerHTML = entries.map(t => `
+          <div class="border rounded-lg p-3 bg-slate-50 flex justify-between items-start gap-3">
+            <div class="min-w-0">
+              <p class="font-bold text-sm text-slate-900">${escapeHtml(t.name || 'Anonymous')}</p>
+              <p class="text-xs text-slate-600 mt-1 whitespace-pre-line">${escapeHtml(t.text || '')}</p>
+            </div>
+            <button onclick="deleteTestimony('${t.key}')" class="text-red-600 hover:text-red-800 text-xs font-bold flex-shrink-0">Delete</button>
+          </div>`).join('');
+      });
+    }
+
+    function deleteTestimony(key) {
+      if (!confirm("Delete this testimony? This cannot be undone.")) return;
+      db.ref('testimonies/' + key).remove().catch(err => {
+        console.error("Delete testimony error:", err);
+        alert("Failed to delete. Please try again.");
+      });
     }
 
     function logout() {
@@ -289,6 +365,12 @@
         renderFlierFields();
 
         renderFaqFields();
+
+        document.getElementById('admin-giving-title').value = churchData.givingSectionTitle || "GIVE TO THE WORK OF GOD";
+        renderGivingCardFields();
+
+        document.getElementById('admin-testimonies-enabled').checked = churchData.testimoniesEnabled !== false;
+        updateTestimoniesToggleLabel();
 
         if (churchData.upcomingProgram) {
           document.getElementById('admin-event-title').value = churchData.upcomingProgram.title || '';
@@ -410,7 +492,7 @@
             <button type="button" onclick="removeVideo(${i})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
             <div class="grid md:grid-cols-2 gap-2 mb-2">
               <input type="text" id="vid-title-${i}" value="${v.title || ''}" placeholder="Sermon Title" class="border p-2 rounded text-sm">
-              <input type="text" id="vid-yt-${i}" value="${v.youtubeId || ''}" placeholder="YouTube Video ID" class="border p-2 rounded text-sm">
+              <input type="text" id="vid-yt-${i}" value="${v.youtubeId || ''}" placeholder="Paste full YouTube link or Video ID" class="border p-2 rounded text-sm">
             </div>
             <textarea id="vid-desc-${i}" placeholder="Short Description" class="w-full border p-2 rounded text-sm mb-2" rows="2">${v.description || ''}</textarea>
             <input type="text" id="vid-date-${i}" value="${v.date || ''}" placeholder="Date / Tag" class="w-full border p-2 rounded text-sm">
@@ -536,6 +618,54 @@
       renderFaqFields();
     }
 
+    function renderGivingCardFields() {
+      const container = document.getElementById('giving-cards-editor-container');
+      container.innerHTML = '';
+      (churchData.givingCards || []).forEach((card, index) => {
+        container.innerHTML += `
+          <div class="border p-4 rounded-lg bg-slate-50 relative">
+            <button type="button" onclick="removeGivingCard(${index})" class="absolute top-2 right-2 text-red-600 font-bold text-xs">Remove</button>
+            <div class="grid md:grid-cols-2 gap-2 mb-2">
+              <input type="text" id="giving-title-${index}" value="${card.title || ''}" placeholder="Card Title (e.g. Tithes & Offering)" class="border p-2 rounded text-sm">
+              <input type="text" id="giving-bank-${index}" value="${card.bankName || ''}" placeholder="Bank Name" class="border p-2 rounded text-sm">
+            </div>
+            <div class="grid md:grid-cols-2 gap-2 mb-2">
+              <input type="text" id="giving-accname-${index}" value="${card.accountName || ''}" placeholder="Account Name" class="border p-2 rounded text-sm">
+              <input type="text" id="giving-accnum-${index}" value="${card.accountNumber || ''}" placeholder="Account Number" class="border p-2 rounded text-sm">
+            </div>
+            <input type="text" id="giving-note-${index}" value="${card.note || ''}" placeholder="Optional note (e.g. Swift code, instructions)" class="w-full border p-2 rounded text-sm">
+          </div>`;
+      });
+    }
+
+    function syncGivingCardsFromDOM() {
+      (churchData.givingCards || []).forEach((card, i) => {
+        const t = document.getElementById(`giving-title-${i}`);
+        const bk = document.getElementById(`giving-bank-${i}`);
+        const an = document.getElementById(`giving-accname-${i}`);
+        const anum = document.getElementById(`giving-accnum-${i}`);
+        const note = document.getElementById(`giving-note-${i}`);
+        if (t) card.title = t.value;
+        if (bk) card.bankName = bk.value;
+        if (an) card.accountName = an.value;
+        if (anum) card.accountNumber = anum.value;
+        if (note) card.note = note.value;
+      });
+    }
+
+    function addGivingCardField() {
+      syncGivingCardsFromDOM();
+      if (!churchData.givingCards) churchData.givingCards = [];
+      churchData.givingCards.push({ title: "Tithes & Offering", bankName: "", accountName: "", accountNumber: "", note: "" });
+      renderGivingCardFields();
+    }
+
+    function removeGivingCard(index) {
+      syncGivingCardsFromDOM();
+      churchData.givingCards.splice(index, 1);
+      renderGivingCardFields();
+    }
+
     async function saveData(e) {
       e.preventDefault();
       const saveBtn = document.getElementById('save-btn');
@@ -575,6 +705,17 @@
         if (q && a) updatedFaqs.push({ id: Date.now() + i, question: q, answer: a });
       }
 
+      const updatedGivingCards = [];
+      const givingCount = document.getElementById('giving-cards-editor-container').children.length;
+      for (let i = 0; i < givingCount; i++) {
+        const title = document.getElementById(`giving-title-${i}`)?.value;
+        const bankName = document.getElementById(`giving-bank-${i}`)?.value;
+        const accountName = document.getElementById(`giving-accname-${i}`)?.value;
+        const accountNumber = document.getElementById(`giving-accnum-${i}`)?.value;
+        const note = document.getElementById(`giving-note-${i}`)?.value;
+        if (title && accountNumber) updatedGivingCards.push({ id: Date.now() + i, title, bankName, accountName, accountNumber, note });
+      }
+
       churchData = {
         siteName: document.getElementById('admin-site-name').value,
         siteDescription: document.getElementById('admin-site-desc').value,
@@ -593,6 +734,9 @@
         },
         videos: updatedVideos,
         faqs: updatedFaqs,
+        givingSectionTitle: document.getElementById('admin-giving-title').value || "GIVE TO THE WORK OF GOD",
+        givingCards: updatedGivingCards,
+        testimoniesEnabled: document.getElementById('admin-testimonies-enabled').checked,
         contacts: {
           email: document.getElementById('admin-email').value,
           phone: document.getElementById('admin-phone').value,
