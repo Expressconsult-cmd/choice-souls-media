@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testimonies | CHOICE SOULS MEDIA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans overflow-x-hidden">
+
+  <!-- Page Loader -->
+  <div id="page-loader" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-slate-400 text-sm font-medium">Loading...</p>
+  </div>
+
+  <!-- Header Navigation -->
+  <nav class="bg-white shadow-md sticky top-0 z-40 border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center gap-3">
+      <a href="index.html" class="flex items-center space-x-3 min-w-0">
+        <img id="site-logo" src="" alt="Church Logo" class="h-10 w-auto rounded hidden flex-shrink-0">
+        <h1 id="site-name" class="text-lg md:text-xl font-bold text-slate-900 truncate">CHOICE SOULS MEDIA</h1>
+      </a>
+      <a href="index.html" class="bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold text-sm px-4 py-2 rounded-lg transition flex-shrink-0">
+        &larr; Back to Home
+      </a>
+    </div>
+  </nav>
+
+  <!-- Banner -->
+  <section class="bg-slate-900 text-white py-12 sm:py-16 px-4 text-center">
+    <span class="text-xs font-bold uppercase tracking-widest text-amber-400">Testimonies</span>
+    <h1 class="text-3xl md:text-5xl font-extrabold mt-1">What God Has Done</h1>
+    <p class="text-slate-300 text-sm md:text-base max-w-xl mx-auto mt-2">Read testimonies from our church family, and share your own story of God's faithfulness.</p>
+  </section>
+
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- Submission Form (hidden if submissions are disabled) -->
+    <div id="testimony-form-wrapper" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-12">
+      <h2 class="text-xl font-bold text-slate-900 mb-4">Share Your Testimony</h2>
+      <form id="testimony-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Full Name</label>
+          <input type="text" id="testimony-name" class="w-full border p-2.5 rounded-lg text-sm" placeholder="Your full name" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Your Testimony</label>
+          <textarea id="testimony-text" rows="5" class="w-full border p-2.5 rounded-lg text-sm" placeholder="Share what God has done in your life..." required></textarea>
+        </div>
+        <button type="submit" id="testimony-submit-btn" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-lg shadow transition">Submit Testimony</button>
+        <p id="testimony-status" class="text-xs text-center text-slate-500"></p>
+      </form>
+    </div>
+
+    <div id="testimony-closed-message" class="hidden bg-slate-100 border border-slate-200 rounded-2xl p-6 text-center mb-12">
+      <p class="text-slate-600 font-medium">Testimony submissions are currently closed. Check back soon!</p>
+    </div>
+
+    <!-- Testimonies Wall -->
+    <h2 class="text-2xl font-bold text-slate-900 mb-6">Shared Testimonies</h2>
+    <div id="testimonies-list" class="space-y-5"></div>
+    <p id="no-testimonies-msg" class="hidden text-slate-500 text-sm">No testimonies have been shared yet. Be the first!</p>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAK4oFHPdcmZvb6Gsis_2XSy4ljbJp7dkA",
+      authDomain: "choice-souls-media.firebaseapp.com",
+      databaseURL: "https://choice-souls-media-default-rtdb.firebaseio.com/",
+      projectId: "choice-souls-media",
+      storageBucket: "choice-souls-media.firebasestorage.app",
+      messagingSenderId: "317717012894",
+      appId: "1:317717012894:web:682450a305ad630ea9368f",
+      measurementId: "G-37TWV4WJQJ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let hasRenderedOnce = false;
+
+    function hidePageLoader() {
+      const loader = document.getElementById('page-loader');
+      if (!loader) return;
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 500);
+    }
+
+    // Load site branding + whether testimony submissions are open (from churchData)
+    db.ref('churchData').on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      document.getElementById('site-name').innerText = data.siteName || "CHOICE SOULS MEDIA";
+      if (data.siteLogo) {
+        const logo = document.getElementById('site-logo');
+        logo.src = data.siteLogo;
+        logo.classList.remove('hidden');
+      }
+
+      const enabled = data.testimoniesEnabled !== false;
+      document.getElementById('testimony-form-wrapper').classList.toggle('hidden', !enabled);
+      document.getElementById('testimony-closed-message').classList.toggle('hidden', enabled);
+
+      if (!hasRenderedOnce) {
+        hasRenderedOnce = true;
+        hidePageLoader();
+      }
+    }, () => hidePageLoader());
+
+    setTimeout(() => { if (!hasRenderedOnce) hidePageLoader(); }, 6000);
+
+    // Load and display all submitted testimonies, newest first
+    function timeAgo(timestamp) {
+      if (!timestamp) return '';
+      const diff = Date.now() - timestamp;
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      if (days < 30) return `${days}d ago`;
+      return new Date(timestamp).toLocaleDateString();
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.innerText = str;
+      return div.innerHTML;
+    }
+
+    db.ref('testimonies').orderByChild('timestamp').on('value', (snapshot) => {
+      const listEl = document.getElementById('testimonies-list');
+      const emptyMsg = document.getElementById('no-testimonies-msg');
+      const entries = [];
+      snapshot.forEach((child) => {
+        entries.push({ key: child.key, ...child.val() });
+      });
+      entries.reverse(); // newest first
+
+      if (entries.length === 0) {
+        listEl.innerHTML = '';
+        emptyMsg.classList.remove('hidden');
+        return;
+      }
+      emptyMsg.classList.add('hidden');
+
+      listEl.innerHTML = entries.map(t => {
+        const liked = getLikedKeys().includes(t.key);
+        const likeCount = t.likes || 0;
+        return `
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div class="flex justify-between items-start gap-3 mb-2">
+            <h3 class="font-bold text-slate-900">${escapeHtml(t.name || 'Anonymous')}</h3>
+            <span class="text-xs text-slate-400 flex-shrink-0">${timeAgo(t.timestamp)}</span>
+          </div>
+          <p class="text-sm text-slate-600 whitespace-pre-line mb-3">${escapeHtml(t.text || '')}</p>
+          <button onclick="toggleLike('${t.key}')" id="like-btn-${t.key}" class="flex items-center gap-1.5 text-sm font-semibold transition ${liked ? 'text-amber-600' : 'text-slate-400 hover:text-amber-500'}">
+            <svg class="w-4 h-4" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            <span id="like-count-${t.key}">${likeCount}</span>
+          </button>
+        </div>`;
+      }).join('');
+    });
+
+    // Track which testimonies this browser has liked, so the same visitor
+    // can't like the same testimony repeatedly (no login system on this site)
+    function getLikedKeys() {
+      try {
+        return JSON.parse(localStorage.getItem('likedTestimonies') || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function setLikedKeys(keys) {
+      localStorage.setItem('likedTestimonies', JSON.stringify(keys));
+    }
+
+    function toggleLike(key) {
+      const likedKeys = getLikedKeys();
+      const alreadyLiked = likedKeys.includes(key);
+      const likeRef = db.ref(`testimonies/${key}/likes`);
+
+      likeRef.transaction((current) => {
+        const count = current || 0;
+        return alreadyLiked ? Math.max(0, count - 1) : count + 1;
+      });
+
+      if (alreadyLiked) {
+        setLikedKeys(likedKeys.filter(k => k !== key));
+      } else {
+        setLikedKeys([...likedKeys, key]);
+      }
+
+      const btn = document.getElementById(`like-btn-${key}`);
+      if (btn) {
+        btn.classList.toggle('text-amber-600', !alreadyLiked);
+        btn.classList.toggle('text-slate-400', alreadyLiked);
+        const svg = btn.querySelector('svg');
+        svg.setAttribute('fill', alreadyLiked ? 'none' : 'currentColor');
+      }
+    }
+
+    // Handle new testimony submission
+    document.getElementById('testimony-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('testimony-submit-btn');
+      const status = document.getElementById('testimony-status');
+      const name = document.getElementById('testimony-name').value.trim();
+      const text = document.getElementById('testimony-text').value.trim();
+
+      if (!name || !text) return;
+
+      btn.disabled = true;
+      btn.innerText = "Submitting...";
+      status.innerText = "";
+
+      try {
+        await db.ref('testimonies').push({
+          name: name,
+          text: text,
+          timestamp: Date.now()
+        });
+        document.getElementById('testimony-form').reset();
+        status.innerText = "Thank you for sharing! Your testimony has been posted.";
+        status.className = "text-xs text-center text-emerald-600 font-semibold";
+      } catch (err) {
+        console.error("Testimony submit error:", err);
+        status.innerText = "Something went wrong. Please try again.";
+        status.className = "text-xs text-center text-red-600 font-semibold";
+      }
+
+      btn.disabled = false;
+      btn.innerText = "Submit Testimony";
+    });
+  </script>
+</body>
+</html>
