@@ -94,8 +94,17 @@
       });
     }
 
+    function extractYouTubeId(input) {
+      if (!input) return '';
+      const trimmed = input.trim();
+      const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{6,})/);
+      if (match) return match[1];
+      return trimmed.split('&')[0].split('?')[0];
+    }
+
     function playArchiveVideo(id) {
-      document.getElementById('archive-player').src = `https://www.youtube.com/embed/${id}?autoplay=0`;
+      const cleanId = extractYouTubeId(id);
+      document.getElementById('archive-player').src = `https://www.youtube.com/embed/${cleanId}?autoplay=0`;
       window.scrollTo({ top: 150, behavior: 'smooth' });
     }
 
