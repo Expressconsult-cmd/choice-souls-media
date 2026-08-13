@@ -28,7 +28,7 @@
         </div>
         <button type="submit" class="w-full bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold py-3 rounded-lg shadow transition">Login to Control Panel</button>
       </form>
-      <p class="text-xs text-center text-slate-400 mt-4">Default login — Username: <b>admin</b> | Password: <b>admin</b></p>
+      <p class="text-xs text-center text-slate-400 mt-4 uppercase tracking-wide font-semibold">Forgot login? Contact admin</p>
     </div>
   </div>
 
@@ -228,44 +228,67 @@
     let churchData = {};
     let currentLogoUrl = "";
 
-    // Always ensures admin/admin exists if not previously set
-    function getCredentials() {
-      const storedCreds = localStorage.getItem('adminCredentials');
-      if (!storedCreds) {
-        const defaultCreds = { user: "admin", pass: "admin" };
-        localStorage.setItem('adminCredentials', JSON.stringify(defaultCreds));
-        return defaultCreds;
+    // Credentials now live in Firebase (not this browser only), so a password
+    // change works the same on every device, not just the one it was changed on.
+    async function getCredentials() {
+      try {
+        const snapshot = await db.ref('adminCredentials').once('value');
+        const stored = snapshot.val();
+        if (stored && stored.user && stored.pass) return stored;
+      } catch (err) {
+        console.error("Error fetching credentials:", err);
       }
-      return JSON.parse(storedCreds);
+      const defaultCreds = { user: "admin", pass: "admin" };
+      db.ref('adminCredentials').set(defaultCreds).catch(err => console.error("Error setting default credentials:", err));
+      return defaultCreds;
     }
 
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerText;
+      submitBtn.innerText = "Checking...";
+      submitBtn.disabled = true;
+
       const inputUser = document.getElementById('login-email').value.trim();
       const inputPass = document.getElementById('login-password').value.trim();
-      const currentCreds = getCredentials();
 
-      if (
-        inputUser.toLowerCase() === currentCreds.user.toLowerCase() && 
-        inputPass === currentCreds.pass
-      ) {
-        sessionStorage.setItem('adminLoggedIn', 'true');
-        showDashboard();
-      } else {
-        alert(`Invalid credentials. Use Username: admin and Password: admin`);
+      try {
+        const currentCreds = await getCredentials();
+        if (
+          inputUser.toLowerCase() === currentCreds.user.toLowerCase() &&
+          inputPass === currentCreds.pass
+        ) {
+          sessionStorage.setItem('adminLoggedIn', 'true');
+          showDashboard();
+          return;
+        } else {
+          alert("Invalid username or password.");
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        alert("Couldn't verify login right now. Check your connection and try again.");
       }
+
+      submitBtn.innerText = originalText;
+      submitBtn.disabled = false;
     }
 
-    function updateCredentials(e) {
+    async function updateCredentials(e) {
       e.preventDefault();
       const newUser = document.getElementById('new-admin-email').value.trim();
       const newPass = document.getElementById('new-admin-pass').value.trim();
 
-      if (newUser && newPass) {
-        localStorage.setItem('adminCredentials', JSON.stringify({ user: newUser, pass: newPass }));
-        alert("Credentials updated successfully! Use your new login details next time.");
+      if (!newUser || !newPass) return;
+
+      try {
+        await db.ref('adminCredentials').set({ user: newUser, pass: newPass });
+        alert("Credentials updated successfully! Use your new login details next time, on any device.");
         document.getElementById('new-admin-email').value = "";
         document.getElementById('new-admin-pass').value = "";
+      } catch (err) {
+        console.error("Error updating credentials:", err);
+        alert("Failed to update credentials. Check your Firebase database rules.");
       }
     }
 
